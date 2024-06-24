@@ -19,5 +19,3 @@ const App = () => {
 };
 
 export default App;
-
-hello
