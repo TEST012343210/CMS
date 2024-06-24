@@ -1,5 +1,20 @@
+// src/components/Devices/UnapprovedDevices.js
 import React, { useEffect, useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableRow, Paper, Typography, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+} from '@mui/material';
 import { getUnapprovedDevices, approveDevice, updateDeviceDetails, deleteDevice } from '../../services/deviceService';
 import { toast } from 'react-toastify';
 

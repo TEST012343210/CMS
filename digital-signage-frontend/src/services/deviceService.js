@@ -38,4 +38,11 @@ const updateDeviceDetails = (deviceId, name, locationId) => {
   });
 };
 
-export { getAllDevices, getUnapprovedDevices, approveDevice, deleteDevice, updateDeviceDetails };
+// Fetch a device by ID with authentication
+const getDeviceById = (deviceId) => {
+  return axios.get(`${API_URL}/${deviceId}`, {
+    headers: { 'x-auth-token': localStorage.getItem('token') },
+  });
+};
+
+export { getAllDevices, getUnapprovedDevices, approveDevice, deleteDevice, updateDeviceDetails, getDeviceById };

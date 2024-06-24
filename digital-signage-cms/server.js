@@ -15,6 +15,12 @@ connectDB();
 app.use(bodyParser.json());
 app.use(cors());
 
+// Add CSP headers to allow 'eval'
+app.use((req, res, next) => {
+  res.setHeader("Content-Security-Policy", "script-src 'self' 'unsafe-eval'");
+  next();
+});
+
 // Define Routes
 app.use('/api/users', require('./routes/users'));
 app.use('/api/content', require('./routes/content'));

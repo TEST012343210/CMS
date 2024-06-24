@@ -38,6 +38,22 @@ router.get('/unapproved', [auth, checkRole(['Admin', 'Content Manager'])], async
   }
 });
 
+// Get device by ID
+router.get('/:id', [auth, checkRole(['Admin', 'Content Manager'])], async (req, res) => {
+  const requestId = uuidv4();
+  try {
+    const device = await Device.findById(req.params.id);
+    if (!device) {
+      logWithTimestamp(`Device not found: ${req.params.id}`, requestId);
+      return res.status(404).json({ msg: 'Device not found' });
+    }
+    res.json(device);
+  } catch (err) {
+    logWithTimestamp(`Server error: ${err.message}`, requestId);
+    res.status(500).send('Server error');
+  }
+});
+
 // Approve device and optionally rename it
 router.patch('/:id/approve', [auth, checkRole(['Admin'])], async (req, res) => {
   const requestId = uuidv4();
@@ -109,19 +125,12 @@ router.delete('/:id', [auth, checkRole(['Admin'])], async (req, res) => {
 // Register Device via POST request
 router.post('/register', async (req, res) => {
   const requestId = uuidv4();
-  const { identifier } = req.body;
 
   try {
-    let device = await Device.findOne({ identifier });
-    if (device) {
-      logWithTimestamp(`Device already registered: ${identifier}`, requestId);
-      return res.status(400).json({ msg: 'Device already registered' });
-    }
-
     const devicesCount = await Device.countDocuments();
     const newIdentifier = `Display${(devicesCount + 1).toString().padStart(4, '0')}`;
 
-    device = new Device({
+    const device = new Device({
       name: 'Unnamed Device',
       identifier: newIdentifier,
       approved: false,
@@ -161,22 +170,16 @@ router.get('/register', async (req, res) => {
 
       logWithTimestamp(`Generated new identifier: ${newIdentifier}`, requestId);
 
-      let device = await Device.findOne({ identifier: newIdentifier });
-      if (!device) {
-        device = new Device({
-          name: 'Unnamed Device',
-          identifier: newIdentifier,
-          approved: false,
-          code,
-        });
+      const device = new Device({
+        name: 'Unnamed Device',
+        identifier: newIdentifier,
+        approved: false,
+        code,
+      });
 
-        await device.save();
-        logWithTimestamp(`Device registered with identifier: ${newIdentifier}`, requestId);
-        res.json({ identifier: newIdentifier, code: code }); // Respond with JSON instead of HTML
-      } else {
-        logWithTimestamp('Device already registered', requestId);
-        res.json({ identifier: device.identifier, code: device.code });
-      }
+      await device.save();
+      logWithTimestamp(`Device registered with identifier: ${newIdentifier}`, requestId);
+      res.json({ identifier: newIdentifier, code: device.code });
     } catch (err) {
       logWithTimestamp(`Error during GET /register: ${err.message}`, requestId);
       res.status(500).send('Server error');
@@ -200,7 +203,7 @@ router.get('/register/sssp_config.xml', (req, res) => {
     <device>
       <name>Unnamed Device</name>
       <identifier>Display</identifier>
-      <approved:false</approved>
+      <approved>false</approved>
     </device>
   </SamsungSmartSignagePlatform>`);
 });
@@ -213,8 +216,8 @@ router.get('/test/sssp_config.xml', (req, res) => {
   <SamsungSmartSignagePlatform>
     <device>
       <name>Test Device</name>
-      <identifier:TestDisplay</identifier>
-      <approved:false</approved>
+      <identifier>TestDisplay</identifier>
+      <approved>false</approved>
     </device>
   </SamsungSmartSignagePlatform>`);
 });
