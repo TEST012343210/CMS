@@ -12,7 +12,7 @@ import ManageContent from './components/Dashboard/ManageContent';
 import ManageSchedules from './components/Dashboard/ManageSchedules';
 import Dashboard from './components/Dashboard/Dashboard';
 import AllDevices from './components/Devices/AllDevices';
-import UnapprovedDevices from './components/Dashboard/UnapprovedDevices';
+import UnapprovedDevices from './components/Devices/UnapprovedDevices';
 import DeviceRegistration from './components/DeviceRegistration';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
