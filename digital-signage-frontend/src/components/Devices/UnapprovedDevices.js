@@ -9,6 +9,7 @@ const UnapprovedDevices = () => {
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [deviceName, setDeviceName] = useState('');
   const [locationId, setLocationId] = useState('');
+  const [code, setCode] = useState('');
 
   useEffect(() => {
     const fetchDevices = async () => {
@@ -28,13 +29,14 @@ const UnapprovedDevices = () => {
     setSelectedDevice(device);
     setDeviceName(device.name);
     setLocationId(device.locationId || '');
+    setCode(''); // Clear the code input field
     setOpen(true);
   };
 
   const handleApprove = async () => {
     try {
       await updateDeviceDetails(selectedDevice._id, deviceName, locationId);
-      await approveDevice(selectedDevice._id);
+      await approveDevice(selectedDevice._id, code); // Pass the code for verification
       setDevices(devices.filter(device => device._id !== selectedDevice._id));
       toast.success('Device approved and updated successfully');
       setOpen(false);
@@ -106,6 +108,13 @@ const UnapprovedDevices = () => {
             fullWidth
             value={locationId}
             onChange={(e) => setLocationId(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="Code"
+            fullWidth
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
           />
         </DialogContent>
         <DialogActions>
