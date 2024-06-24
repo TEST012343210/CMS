@@ -15,11 +15,16 @@ const DeviceSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  code: {
+    type: String,
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-  // Add any other necessary fields
 });
+
+DeviceSchema.index({ identifier: 1 }, { unique: true });
 
 module.exports = mongoose.model('Device', DeviceSchema);
