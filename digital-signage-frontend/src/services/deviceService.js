@@ -6,42 +6,42 @@ const API_URL = 'http://localhost:3000/api/devices';
 // Fetch all devices with authentication
 const getAllDevices = () => {
   return axios.get(API_URL, {
-    headers: { 'x-auth-token': localStorage.getItem('token') },
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
   });
 };
 
 // Fetch unapproved devices with authentication
 const getUnapprovedDevices = () => {
   return axios.get(`${API_URL}/unapproved`, {
-    headers: { 'x-auth-token': localStorage.getItem('token') },
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
   });
 };
 
 // Approve a device with authentication
-const approveDevice = (deviceId) => {
-  return axios.patch(`${API_URL}/${deviceId}/approve`, {}, {
-    headers: { 'x-auth-token': localStorage.getItem('token') },
+const approveDevice = (deviceId, name, locationId, code) => {
+  return axios.patch(`${API_URL}/${deviceId}/approve`, { name, locationId, code }, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
   });
 };
 
 // Delete a device with authentication
 const deleteDevice = (deviceId) => {
   return axios.delete(`${API_URL}/${deviceId}`, {
-    headers: { 'x-auth-token': localStorage.getItem('token') },
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
   });
 };
 
 // Update device details with authentication
 const updateDeviceDetails = (deviceId, name, locationId) => {
   return axios.patch(`${API_URL}/${deviceId}/details`, { name, locationId }, {
-    headers: { 'x-auth-token': localStorage.getItem('token') },
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
   });
 };
 
 // Fetch a device by ID with authentication
 const getDeviceById = (deviceId) => {
   return axios.get(`${API_URL}/${deviceId}`, {
-    headers: { 'x-auth-token': localStorage.getItem('token') },
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
   });
 };
 

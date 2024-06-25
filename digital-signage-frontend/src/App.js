@@ -1,6 +1,9 @@
 // src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import theme from './theme';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import ContentList from './components/Content/ContentList';
@@ -24,31 +27,34 @@ const App = () => {
   const role = localStorage.getItem('role');
 
   return (
-    <Router>
-      <div className="App">
-        <ErrorBoundary>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/content" element={<ContentList token={token} />} />
-            <Route path="/create-content" element={<ContentForm token={token} />} />
-            <Route path="/register-device" element={<DeviceRegistration />} />
-            <Route path="/dashboard" element={<DashboardLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="all-devices" element={<AllDevices />} />
-              <Route path="unapproved-devices" element={<UnapprovedDevices />} />
-              <Route path="manage-device/:id" element={<ManageDevice />} />
-              {role === 'Admin' && <Route path="users" element={<Users />} />}
-              <Route path="content" element={<ManageContent token={token} />} />
-              <Route path="create-content" element={<ContentForm token={token} />} />
-              <Route path="schedules" element={<ManageSchedules />} />
-            </Route>
-          </Routes>
-          <ToastContainer />
-        </ErrorBoundary>
-      </div>
-    </Router>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <div className="App">
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/content" element={<ContentList token={token} />} />
+              <Route path="/create-content" element={<ContentForm token={token} />} />
+              <Route path="/register-device" element={<DeviceRegistration />} />
+              <Route path="/dashboard" element={<DashboardLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="all-devices" element={<AllDevices />} />
+                <Route path="unapproved-devices" element={<UnapprovedDevices />} />
+                <Route path="manage-device/:id" element={<ManageDevice />} />
+                {role === 'Admin' && <Route path="users" element={<Users />} />}
+                <Route path="content" element={<ManageContent token={token} />} />
+                <Route path="create-content" element={<ContentForm token={token} />} />
+                <Route path="schedules" element={<ManageSchedules />} />
+              </Route>
+            </Routes>
+            <ToastContainer />
+          </ErrorBoundary>
+        </div>
+      </Router>
+    </ThemeProvider>
   );
 };
 

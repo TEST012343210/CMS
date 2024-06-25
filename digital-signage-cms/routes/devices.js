@@ -80,7 +80,7 @@ router.patch('/:id/approve', [auth, checkRole(['Admin'])], async (req, res) => {
     res.json(device);
   } catch (err) {
     logWithTimestamp(`Server error: ${err.message}`, requestId);
-    res.status(500).send('Server error');
+    res.status(500).json({ msg: 'Server error' });
   }
 });
 

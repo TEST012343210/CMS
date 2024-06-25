@@ -1,3 +1,4 @@
+// src/components/RegisterDevice.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { CircularProgress, Typography, Box } from '@mui/material';
@@ -18,34 +19,39 @@ const RegisterDevice = () => {
 
       console.log(`Attempting to register device... Retry count: ${retryCount}`);
       try {
-        const response = await axios.get('http://localhost:3000/api/devices/register');
+        // Retrieve the token from wherever it's stored
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          throw new Error('No auth token found in localStorage');
+        }
+        console.log('Token retrieved:', token);
+
+        const response = await axios.get('http://localhost:3000/api/devices/register', {
+          headers: {
+            'Authorization': `Bearer ${token}` // Include the token in the request headers
+          }
+        });
+
         if (isMounted) {
           console.log('Device registered successfully:', response.data);
-
           if (response.data && response.data.code) {
             setCode(response.data.code);
             console.log('Code from JSON response:', response.data.code);
           } else {
             console.error('No code in response data');
           }
-
           toast.success(`Device registered: ${response.data.identifier}`);
           setLoading(false);
         }
       } catch (error) {
-        if (error.response && error.response.status === 429) {
-          console.warn(`429 response received. Retry count: ${retryCount}`);
-          if (retryCount < 3) { // Retry only a few times
-            setRetryCount(retryCount + 1);
-            setLoading(true);
-            setTimeout(registerDevice, 2000); // Retry after 2 seconds
-          } else {
-            if (isMounted) {
-              console.error('Too many attempts, please try again later.');
-              toast.error('Too many attempts, please try again later.');
-              setLoading(false);
-            }
-          }
+        if (error.response && error.response.status === 401) {
+          console.error('Authentication failed. Please log in again.');
+          toast.error('Authentication failed. Please log in again.');
+          // Here you might want to redirect the user to a login page
+          setLoading(false);
+        } else if (error.response && error.response.status === 429) {
+          console.error('Too many requests, retrying...');
+          setRetryCount(prevCount => prevCount + 1);
         } else {
           if (isMounted) {
             console.error('Error registering device:', error.response?.data || error.message);

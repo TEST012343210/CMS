@@ -19,6 +19,9 @@ const DeviceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  locationId: {
+    type: String, // Add this field
+  },
   createdAt: {
     type: Date,
     default: Date.now,

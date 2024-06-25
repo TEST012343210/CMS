@@ -15,10 +15,14 @@ import {
   DialogTitle,
   TextField,
 } from '@mui/material';
-import { getUnapprovedDevices, approveDevice, updateDeviceDetails, deleteDevice } from '../../services/deviceService';
+import { useTheme } from '@mui/material/styles';
+import { getUnapprovedDevices, approveDevice, deleteDevice } from '../../services/deviceService';
 import { toast } from 'react-toastify';
 
 const UnapprovedDevices = () => {
+  const theme = useTheme();
+  console.log('Current theme:', theme);
+
   const [devices, setDevices] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState(null);
@@ -27,37 +31,43 @@ const UnapprovedDevices = () => {
   const [code, setCode] = useState('');
 
   useEffect(() => {
-    const fetchDevices = async () => {
-      try {
-        const response = await getUnapprovedDevices();
-        setDevices(response.data);
-      } catch (error) {
-        console.error('Error fetching devices', error.response?.data || error.message);
-        toast.error('Error fetching devices');
-      }
-    };
-
     fetchDevices();
   }, []);
 
+  const fetchDevices = async () => {
+    try {
+      const response = await getUnapprovedDevices();
+      setDevices(response.data);
+    } catch (error) {
+      console.error('Error fetching devices', error.response?.data || error.message);
+      toast.error('Error fetching devices');
+    }
+  };
+
   const handleManageClick = (device) => {
+    console.log('Managing device:', device);
     setSelectedDevice(device);
     setDeviceName(device.name);
     setLocationId(device.locationId || '');
-    setCode(''); // Clear the code input field
+    setCode('');
     setOpen(true);
   };
 
   const handleApprove = async () => {
     try {
-      await updateDeviceDetails(selectedDevice._id, deviceName, locationId);
-      await approveDevice(selectedDevice._id, code); // Pass the code for verification
-      setDevices(devices.filter(device => device._id !== selectedDevice._id));
+      console.log('Approving device:', selectedDevice._id, deviceName, locationId, code);
+      await approveDevice(selectedDevice._id, deviceName, locationId, code);
       toast.success('Device approved and updated successfully');
       setOpen(false);
+      fetchDevices(); // Refresh the list of unapproved devices
     } catch (error) {
-      console.error('Error approving device', error.response?.data || error.message);
-      toast.error('Error approving device');
+      console.error('Error approving device', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        toast.error(`Error approving device: ${error.response.data.msg || 'Unknown error'}`);
+      } else {
+        toast.error('Error approving device: Network error');
+      }
     }
   };
 
@@ -95,10 +105,15 @@ const UnapprovedDevices = () => {
               <TableCell>{device.name}</TableCell>
               <TableCell>{device.identifier}</TableCell>
               <TableCell>
-                <Button variant="contained" color="primary" onClick={() => handleManageClick(device)}>
+                <Button variant="contained" onClick={() => handleManageClick(device)}>
                   Manage Device
                 </Button>
-                <Button variant="contained" color="secondary" onClick={() => handleDelete(device._id)} style={{ marginLeft: '10px' }}>
+                <Button 
+                  variant="contained" 
+                  color="secondary" 
+                  onClick={() => handleDelete(device._id)} 
+                  style={{ marginLeft: '10px' }}
+                >
                   Delete
                 </Button>
               </TableCell>
@@ -136,7 +151,7 @@ const UnapprovedDevices = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="default">
+          <Button onClick={handleClose}>
             Close
           </Button>
           <Button onClick={handleApprove} color="primary">
