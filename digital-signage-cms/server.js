@@ -1,6 +1,7 @@
 // server.js
 require('dotenv').config();
 const express = require('express');
+const helmet = require('helmet');
 const connectDB = require('./config/db');
 const bodyParser = require('body-parser');
 const deviceRoutes = require('./routes/devices');
@@ -15,11 +16,15 @@ connectDB();
 app.use(bodyParser.json());
 app.use(cors());
 
-// Add CSP headers to allow 'eval'
-app.use((req, res, next) => {
-  res.setHeader("Content-Security-Policy", "script-src 'self' 'unsafe-eval'");
-  next();
-});
+// Set security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-eval'"]
+    }
+  }
+}));
 
 // Define Routes
 app.use('/api/users', require('./routes/users'));

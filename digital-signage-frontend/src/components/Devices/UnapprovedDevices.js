@@ -116,6 +116,7 @@ const UnapprovedDevices = () => {
             fullWidth
             value={deviceName}
             onChange={(e) => setDeviceName(e.target.value)}
+            autoComplete="off"
           />
           <TextField
             margin="dense"
@@ -123,6 +124,7 @@ const UnapprovedDevices = () => {
             fullWidth
             value={locationId}
             onChange={(e) => setLocationId(e.target.value)}
+            autoComplete="off"
           />
           <TextField
             margin="dense"
@@ -130,6 +132,7 @@ const UnapprovedDevices = () => {
             fullWidth
             value={code}
             onChange={(e) => setCode(e.target.value)}
+            autoComplete="off"
           />
         </DialogContent>
         <DialogActions>
