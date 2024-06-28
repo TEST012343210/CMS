@@ -1,4 +1,5 @@
 // src/services/authService.js
+
 import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/api/users';
@@ -18,6 +19,10 @@ const login = async (email, password) => {
       email,
       password,
     });
+    if (response.data && response.data.token && response.data.user) {
+      localStorage.setItem('authToken', response.data.token); // Store the token
+      localStorage.setItem('role', response.data.user.role); // Store user role
+    }
     return response;
   } catch (error) {
     console.error('Login error', error);

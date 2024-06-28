@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 const bodyParser = require('body-parser');
 const deviceRoutes = require('./routes/devices');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
@@ -14,7 +15,11 @@ connectDB();
 
 // Init Middleware
 app.use(bodyParser.json());
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3001', 'http://localhost:3002'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // Set security headers
 app.use(helmet({
@@ -23,6 +28,13 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-eval'"]
     }
+  }
+}));
+
+// Serve static files from the uploads directory with CORS headers
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res, path) => {
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
   }
 }));
 

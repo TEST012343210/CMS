@@ -1,82 +1,71 @@
-// src/components/RegisterDevice.js
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { CircularProgress, Typography, Box } from '@mui/material';
+import { CircularProgress, Typography, Box, Button } from '@mui/material';
 import { toast } from 'react-toastify';
 
 const RegisterDevice = () => {
-  const [loading, setLoading] = useState(true);
-  const [retryCount, setRetryCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
   const [code, setCode] = useState('');
 
-  useEffect(() => {
-    let isMounted = true;
-    let requestSent = false;
+  const registerDevice = useCallback(async () => {
+    if (loading) return;
+    setLoading(true);
 
-    const registerDevice = async () => {
-      if (requestSent) return;
-      requestSent = true;
-
-      console.log(`Attempting to register device... Retry count: ${retryCount}`);
-      try {
-        // Retrieve the token from wherever it's stored
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          throw new Error('No auth token found in localStorage');
-        }
-        console.log('Token retrieved:', token);
-
-        const response = await axios.get('http://localhost:3000/api/devices/register', {
-          headers: {
-            'Authorization': `Bearer ${token}` // Include the token in the request headers
-          }
-        });
-
-        if (isMounted) {
-          console.log('Device registered successfully:', response.data);
-          if (response.data && response.data.code) {
-            setCode(response.data.code);
-            console.log('Code from JSON response:', response.data.code);
-          } else {
-            console.error('No code in response data');
-          }
-          toast.success(`Device registered: ${response.data.identifier}`);
-          setLoading(false);
-        }
-      } catch (error) {
-        if (error.response && error.response.status === 401) {
-          console.error('Authentication failed. Please log in again.');
-          toast.error('Authentication failed. Please log in again.');
-          // Here you might want to redirect the user to a login page
-          setLoading(false);
-        } else if (error.response && error.response.status === 429) {
-          console.error('Too many requests, retrying...');
-          setRetryCount(prevCount => prevCount + 1);
-        } else {
-          if (isMounted) {
-            console.error('Error registering device:', error.response?.data || error.message);
-            toast.error('Error registering device');
-            setLoading(false);
-          }
-        }
+    try {
+      const storedToken = localStorage.getItem('authToken');
+      if (!storedToken) {
+        throw new Error('No auth token found in localStorage');
       }
-    };
 
-    registerDevice();
+      const response = await axios.get('http://localhost:3000/api/devices/register', {
+        headers: {
+          'Authorization': `Bearer ${storedToken}`
+        }
+      });
 
-    return () => {
-      isMounted = false;
-    };
-  }, [retryCount]);
+      console.log('Device registered successfully:', response.data);
+      if (response.data && response.data.code) {
+        setCode(response.data.code);
+      }
+      toast.success(`Device registered: ${response.data.identifier}`);
+      setRegistered(true);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        console.error('Authentication failed. Please log in again.');
+        toast.error('Authentication failed. Please log in again.');
+      } else if (error.response && error.response.status === 429) {
+        console.error('Too many requests. Please try again later.');
+        toast.error('Too many requests. Please try again later.');
+      } else {
+        console.error('Error registering device:', error.response?.data || error.message);
+        toast.error('Error registering device');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    if (token) {
+      localStorage.setItem('authToken', token);
+    }
+  }, []);
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100vh">
-      {loading ? (
+      {!registered ? (
         <>
-          <CircularProgress />
-          <Typography variant="h6" style={{ marginTop: '20px' }}>
-            Registering Device...
-          </Typography>
+          <Button 
+            variant="contained" 
+            onClick={registerDevice} 
+            disabled={loading}
+          >
+            Register Device
+          </Button>
+          {loading && <CircularProgress style={{ marginTop: '20px' }} />}
         </>
       ) : (
         <Typography variant="h6">

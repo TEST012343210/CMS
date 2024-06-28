@@ -1,4 +1,3 @@
-// routes/schedule.js
 const express = require('express');
 const router = express.Router();
 const { check, validationResult } = require('express-validator');
@@ -14,9 +13,8 @@ router.post(
     auth,
     checkRole(['Admin', 'Content Manager']),
     [
-      check('content', 'Content ID is required').not().isEmpty(),
-      check('startTime', 'Start time is required').isISO8601(),
-      check('endTime', 'End time is required').isISO8601(),
+      check('name', 'Name is required').not().isEmpty(),
+      check('contentIds', 'Content IDs are required').isArray().notEmpty(),
     ],
   ],
   async (req, res) => {
@@ -25,20 +23,12 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { content, startTime, endTime } = req.body;
+    const { name, contentIds } = req.body;
 
     try {
-      console.log(`Creating schedule for content ID: ${content}`);
-      const contentItem = await Content.findById(content);
-      if (!contentItem) {
-        console.log('Content not found');
-        return res.status(404).json({ msg: 'Content not found' });
-      }
-
       const newSchedule = new Schedule({
-        content,
-        startTime,
-        endTime,
+        name,
+        contents: contentIds,
         user: req.user.id,
       });
 
@@ -52,9 +42,9 @@ router.post(
 );
 
 // Get All Schedules
-router.get('/', auth, async (req, res) => {
+router.get('/', [auth, checkRole(['Admin', 'Content Manager', 'User'])], async (req, res) => {
   try {
-    const schedules = await Schedule.find().populate('content').sort({ startTime: 1 });
+    const schedules = await Schedule.find().populate('contents').sort({ createdAt: -1 });
     res.json(schedules);
   } catch (err) {
     console.error(err.message);
@@ -63,9 +53,9 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Get Schedule by ID
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', [auth, checkRole(['Admin', 'Content Manager', 'User'])], async (req, res) => {
   try {
-    const schedule = await Schedule.findById(req.params.id).populate('content');
+    const schedule = await Schedule.findById(req.params.id).populate('contents');
 
     if (!schedule) {
       return res.status(404).json({ msg: 'Schedule not found' });
@@ -88,9 +78,8 @@ router.put(
     auth,
     checkRole(['Admin', 'Content Manager']),
     [
-      check('content', 'Content ID is required').not().isEmpty(),
-      check('startTime', 'Start time is required').isISO8601(),
-      check('endTime', 'End time is required').isISO8601(),
+      check('name', 'Name is required').not().isEmpty(),
+      check('contentIds', 'Content IDs are required').isArray().notEmpty(),
     ],
   ],
   async (req, res) => {
@@ -99,7 +88,7 @@ router.put(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { content, startTime, endTime } = req.body;
+    const { name, contentIds } = req.body;
 
     try {
       let schedule = await Schedule.findById(req.params.id);
@@ -110,9 +99,9 @@ router.put(
 
       schedule = await Schedule.findByIdAndUpdate(
         req.params.id,
-        { $set: { content, startTime, endTime } },
+        { $set: { name, contents: contentIds } },
         { new: true }
-      ).populate('content');
+      ).populate('contents');
 
       res.json(schedule);
     } catch (err) {

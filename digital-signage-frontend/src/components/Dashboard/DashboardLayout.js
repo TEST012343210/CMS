@@ -1,4 +1,3 @@
-// src/components/Dashboard/DashboardLayout.js
 import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemText, CssBaseline, Collapse, ListItemIcon } from '@mui/material';
@@ -16,12 +15,13 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [openContentMenu, setOpenContentMenu] = useState(false);
+  const [openSchedulesMenu, setOpenSchedulesMenu] = useState(false);
   const [openDevicesMenu, setOpenDevicesMenu] = useState(false);
   const [role, setRole] = useState('');
   const [headerTitle, setHeaderTitle] = useState('Dashboard');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('authToken');
     const userRole = localStorage.getItem('role');
     setRole(userRole);
     if (!token) {
@@ -35,11 +35,12 @@ const DashboardLayout = () => {
       case 'users':
         setHeaderTitle('Users');
         break;
-      case 'content':
-      case 'create-content':
+      case 'upload-content':
+      case 'manage-content':
         setHeaderTitle('Content');
         break;
-      case 'schedules':
+      case 'create-schedule':
+      case 'manage-schedules':
         setHeaderTitle('Schedules');
         break;
       case 'devices':
@@ -56,12 +57,16 @@ const DashboardLayout = () => {
     setOpenContentMenu(!openContentMenu);
   };
 
+  const handleSchedulesClick = () => {
+    setOpenSchedulesMenu(!openSchedulesMenu);
+  };
+
   const handleDevicesClick = () => {
     setOpenDevicesMenu(!openDevicesMenu);
   };
 
   const handleSignOut = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
     localStorage.removeItem('role');
     navigate('/login');
   };
@@ -116,20 +121,31 @@ const DashboardLayout = () => {
             </ListItem>
             <Collapse in={openContentMenu} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
-                <ListItem button component={Link} to="/dashboard/content">
-                  <ListItemText primary="Manage Content" />
+                <ListItem button component={Link} to="/dashboard/upload-content">
+                  <ListItemText primary="Upload Content" />
                 </ListItem>
-                <ListItem button component={Link} to="/dashboard/create-content">
-                  <ListItemText primary="Create Content" />
+                <ListItem button component={Link} to="/dashboard/manage-content">
+                  <ListItemText primary="Manage Content" />
                 </ListItem>
               </List>
             </Collapse>
-            <ListItem button component={Link} to="/dashboard/schedules">
+            <ListItem button onClick={handleSchedulesClick}>
               <ListItemIcon>
                 <ScheduleIcon />
               </ListItemIcon>
               <ListItemText primary="Schedules" />
+              {openSchedulesMenu ? <ExpandLess /> : <ExpandMore />}
             </ListItem>
+            <Collapse in={openSchedulesMenu} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem button component={Link} to="/dashboard/create-schedule">
+                  <ListItemText primary="Create Schedule" />
+                </ListItem>
+                <ListItem button component={Link} to="/dashboard/manage-schedules">
+                  <ListItemText primary="Manage Schedules" />
+                </ListItem>
+              </List>
+            </Collapse>
             {role === 'Admin' && (
               <ListItem button component={Link} to="/dashboard/users">
                 <ListItemIcon>

@@ -1,9 +1,9 @@
 // src/components/Dashboard/Users.js
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableRow, Paper, Typography, Select, MenuItem, FormControl, InputLabel, Checkbox, ListItemText, Button } from '@mui/material';
-import { getUsers, deleteUser, banUser, unbanUser } from '../../services/userService';
 import { toast } from 'react-toastify';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import axios from 'axios';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -15,7 +15,17 @@ const Users = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await getUsers();
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          throw new Error('No auth token found in localStorage');
+        }
+
+        const response = await axios.get('http://localhost:3000/api/users', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
         console.log('Fetched users:', response.data);
         setUsers(response.data);
         setFilteredUsers(response.data);
@@ -38,7 +48,12 @@ const Users = () => {
 
   const handleDelete = async (userId) => {
     try {
-      await deleteUser(userId);
+      const token = localStorage.getItem('authToken');
+      await axios.delete(`http://localhost:3000/api/users/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setUsers(users.filter(user => user._id !== userId));
       toast.success('User deleted successfully');
     } catch (error) {
@@ -49,7 +64,12 @@ const Users = () => {
 
   const handleBan = async (userId) => {
     try {
-      await banUser(userId);
+      const token = localStorage.getItem('authToken');
+      await axios.patch(`http://localhost:3000/api/users/${userId}/ban`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setUsers(users.map(user => user._id === userId ? { ...user, banned: true } : user));
       toast.success('User banned successfully');
     } catch (error) {
@@ -60,7 +80,12 @@ const Users = () => {
 
   const handleUnban = async (userId) => {
     try {
-      await unbanUser(userId);
+      const token = localStorage.getItem('authToken');
+      await axios.patch(`http://localhost:3000/api/users/${userId}/unban`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setUsers(users.map(user => user._id === userId ? { ...user, banned: false } : user));
       toast.success('User unbanned successfully');
     } catch (error) {

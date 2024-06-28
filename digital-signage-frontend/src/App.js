@@ -12,6 +12,7 @@ import Home from './components/Home';
 import DashboardLayout from './components/Dashboard/DashboardLayout';
 import Users from './components/Dashboard/Users';
 import ManageContent from './components/Dashboard/ManageContent';
+import CreateSchedule from './components/Dashboard/CreateSchedule';
 import ManageSchedules from './components/Dashboard/ManageSchedules';
 import Dashboard from './components/Dashboard/Dashboard';
 import AllDevices from './components/Devices/AllDevices';
@@ -23,7 +24,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const App = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('authToken'); // Updated to authToken
   const role = localStorage.getItem('role');
 
   return (
@@ -45,9 +46,10 @@ const App = () => {
                 <Route path="unapproved-devices" element={<UnapprovedDevices />} />
                 <Route path="manage-device/:id" element={<ManageDevice />} />
                 {role === 'Admin' && <Route path="users" element={<Users />} />}
-                <Route path="content" element={<ManageContent token={token} />} />
-                <Route path="create-content" element={<ContentForm token={token} />} />
-                <Route path="schedules" element={<ManageSchedules />} />
+                <Route path="upload-content" element={<ContentForm token={token} />} />
+                <Route path="manage-content" element={<ManageContent token={token} />} />
+                <Route path="create-schedule" element={<CreateSchedule token={token} />} />
+                <Route path="manage-schedules" element={<ManageSchedules token={token} />} />
               </Route>
             </Routes>
             <ToastContainer />

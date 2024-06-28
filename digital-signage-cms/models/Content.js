@@ -8,12 +8,32 @@ const ContentSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['image', 'video', 'webpage', 'interactive'],
+    enum: ['image', 'video', 'webpage', 'interactive', 'sssp_web_app', 'ftp', 'cifs', 'streaming'],
     required: true,
   },
   url: {
     type: String,
-    required: true,
+  },
+  file: {
+    type: String,
+  },
+  ssspUrl: {
+    type: String,
+  },
+  ftpDetails: {
+    host: String,
+    path: String,
+    username: String,
+    password: String,
+  },
+  cifsDetails: {
+    host: String,
+    path: String,
+    username: String,
+    password: String,
+  },
+  streamingUrl: {
+    type: String,
   },
   createdAt: {
     type: Date,

@@ -1,18 +1,32 @@
-// src/services/contentService.js
 import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/api/content';
 
-const createContent = (title, type, url, token) => {
-  return axios.post(
-    API_URL,
-    { title, type, url },
-    { headers: { 'x-auth-token': token } }
-  );
+const createContent = async (formData, token) => {
+  try {
+    const response = await axios.post(API_URL, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error creating content', error.response?.data || error.message);
+    throw error;
+  }
 };
 
-const getAllContent = (token) => {
-  return axios.get(API_URL, { headers: { 'x-auth-token': token } });
+const getAllContent = async (token) => {
+  try {
+    const response = await axios.get(API_URL, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching content', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 export { createContent, getAllContent };

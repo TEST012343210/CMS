@@ -14,6 +14,66 @@ const logWithTimestamp = (message, requestId) => {
   console.log(`[${new Date().toISOString()}] [${requestId}] ${message}`);
 };
 
+// Generate a sequential unique identifier
+const generateUniqueIdentifier = async () => {
+  const lastDevice = await Device.findOne().sort({ identifier: -1 }).exec();
+  let lastNumber = 0;
+
+  if (lastDevice) {
+    const match = lastDevice.identifier.match(/Display(\d+)/);
+    if (match) {
+      lastNumber = parseInt(match[1], 10);
+    }
+  }
+
+  const newIdentifier = `Display${(lastNumber + 1).toString().padStart(4, '0')}`;
+  return newIdentifier;
+};
+
+// Register Device via GET request (for URL Launcher)
+router.get('/register', async (req, res) => {
+  const requestId = uuidv4();
+  const requestIp = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  const currentTime = Date.now();
+
+  logWithTimestamp(`Received GET request to /register from IP: ${requestIp}`, requestId);
+
+  if (currentTime - lastRequestTime < 1000) {
+    logWithTimestamp('Registration in progress, request rejected due to rapid successive requests.', requestId);
+    return res.status(429).send('Registration in progress, please try again.');
+  }
+
+  lastRequestTime = currentTime;
+
+  lock.acquire(REGISTRATION_KEY, async (done) => {
+    logWithTimestamp('Lock acquired for /register', requestId);
+    try {
+      const newIdentifier = await generateUniqueIdentifier();
+      const code = Math.floor(100000 + Math.random() * 900000).toString(); // Generate 6-digit code
+
+      logWithTimestamp(`Generated new identifier: ${newIdentifier}`, requestId);
+
+      const device = new Device({
+        name: 'Unnamed Device',
+        identifier: newIdentifier,
+        approved: false,
+        code,
+      });
+
+      await device.save();
+      logWithTimestamp(`Device registered with identifier: ${newIdentifier}`, requestId);
+      res.json({ identifier: newIdentifier, code: device.code });
+    } catch (err) {
+      logWithTimestamp(`Error during GET /register: ${err.message}`, requestId);
+      console.error('Stack trace:', err.stack); // Log stack trace
+      res.status(500).send('Server error');
+    } finally {
+      done();
+      logWithTimestamp('Lock released for /register', requestId);
+    }
+  }, { timeout: 10000 });
+});
+
 // Get all devices
 router.get('/', [auth, checkRole(['Admin', 'Content Manager'])], async (req, res) => {
   const requestId = uuidv4();
@@ -122,78 +182,6 @@ router.delete('/:id', [auth, checkRole(['Admin'])], async (req, res) => {
   }
 });
 
-// Register Device via POST request
-router.post('/register', async (req, res) => {
-  const requestId = uuidv4();
-
-  try {
-    const devicesCount = await Device.countDocuments();
-    const newIdentifier = `Display${(devicesCount + 1).toString().padStart(4, '0')}`;
-
-    const device = new Device({
-      name: 'Unnamed Device',
-      identifier: newIdentifier,
-      approved: false,
-      code: Math.floor(100000 + Math.random() * 900000).toString(), // Generate 6-digit code
-    });
-
-    await device.save();
-    logWithTimestamp(`Device registered with identifier: ${newIdentifier}`, requestId);
-    res.json(device);
-  } catch (err) {
-    logWithTimestamp(`Server error: ${err.message}`, requestId);
-    res.status(500).send('Server error');
-  }
-});
-
-// Register Device via GET request (for URL Launcher)
-router.get('/register', async (req, res) => {
-  const requestId = uuidv4();
-  const requestIp = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  const currentTime = Date.now();
-
-  logWithTimestamp(`Received GET request to /register from IP: ${requestIp}`, requestId);
-
-  if (currentTime - lastRequestTime < 1000) {
-    logWithTimestamp('Registration in progress, request rejected due to rapid successive requests.', requestId);
-    return res.status(429).send('Registration in progress, please try again.');
-  }
-
-  lastRequestTime = currentTime;
-
-  lock.acquire(REGISTRATION_KEY, async (done) => {
-    logWithTimestamp('Lock acquired for /register', requestId);
-    try {
-      const devicesCount = await Device.countDocuments();
-      const newIdentifier = `Display${(devicesCount + 1).toString().padStart(4, '0')}`;
-      const code = Math.floor(100000 + Math.random() * 900000).toString(); // Generate 6-digit code
-
-      logWithTimestamp(`Generated new identifier: ${newIdentifier}`, requestId);
-
-      const device = new Device({
-        name: 'Unnamed Device',
-        identifier: newIdentifier,
-        approved: false,
-        code,
-      });
-
-      await device.save();
-      logWithTimestamp(`Device registered with identifier: ${newIdentifier}`, requestId);
-      res.json({ identifier: newIdentifier, code: device.code });
-    } catch (err) {
-      logWithTimestamp(`Error during GET /register: ${err.message}`, requestId);
-      res.status(500).send('Server error');
-    } finally {
-      done();
-      logWithTimestamp('Lock released for /register', requestId);
-    }
-  }, (err, ret) => {
-    if (err) {
-      logWithTimestamp(`Lock error: ${err}`, requestId);
-    }
-  });
-});
-
 // Handle sssp_config.xml request
 router.get('/register/sssp_config.xml', (req, res) => {
   const requestId = uuidv4();
@@ -217,7 +205,7 @@ router.get('/test/sssp_config.xml', (req, res) => {
     <device>
       <name>Test Device</name>
       <identifier>TestDisplay</identifier>
-      <approved>false</approved>
+      <approved:false></approved:false>
     </device>
   </SamsungSmartSignagePlatform>`);
 });

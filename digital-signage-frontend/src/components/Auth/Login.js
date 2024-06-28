@@ -25,7 +25,7 @@ const Login = () => {
       try {
         const response = await login(values.email, values.password);
         console.log('Login successful', response.data);
-        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('authToken', response.data.token); // Store the token
         localStorage.setItem('role', response.data.user.role); // Store user role
         setOpenSuccess(true);
         setSubmitting(false);

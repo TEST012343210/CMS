@@ -2,19 +2,17 @@
 const mongoose = require('mongoose');
 
 const ScheduleSchema = new mongoose.Schema({
-  content: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Content',
+  name: {
+    type: String,
     required: true,
   },
-  startTime: {
-    type: Date,
-    required: true,
-  },
-  endTime: {
-    type: Date,
-    required: true,
-  },
+  contents: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Content',
+      required: true,
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now,
