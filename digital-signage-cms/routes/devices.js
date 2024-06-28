@@ -1,3 +1,4 @@
+// routes/devices.js
 const express = require('express');
 const router = express.Router();
 const Device = require('../models/Device');
@@ -205,7 +206,7 @@ router.get('/test/sssp_config.xml', (req, res) => {
     <device>
       <name>Test Device</name>
       <identifier>TestDisplay</identifier>
-      <approved:false></approved:false>
+      <approved>false</approved>
     </device>
   </SamsungSmartSignagePlatform>`);
 });
