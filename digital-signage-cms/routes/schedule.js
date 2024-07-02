@@ -4,7 +4,9 @@ const { check, validationResult } = require('express-validator');
 const auth = require('../middlewares/auth');
 const checkRole = require('../middlewares/checkRole');
 const Schedule = require('../models/Schedule');
-const Content = require('../models/Content');
+const DynamicContent = require('../models/DynamicContent');
+const evaluateRule = require('../services/ruleEngine');
+const axios = require('axios');
 
 // Create Schedule
 router.post(
@@ -15,6 +17,7 @@ router.post(
     [
       check('name', 'Name is required').not().isEmpty(),
       check('contentIds', 'Content IDs are required').isArray().notEmpty(),
+      check('dynamicContentIds', 'Dynamic Content IDs are required').isArray().notEmpty(),
     ],
   ],
   async (req, res) => {
@@ -23,12 +26,14 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, contentIds } = req.body;
+    const { name, contentIds, dynamicContentIds, rule } = req.body;
 
     try {
       const newSchedule = new Schedule({
         name,
         contents: contentIds,
+        dynamicContent: dynamicContentIds,
+        rule,
         user: req.user.id,
       });
 
@@ -44,10 +49,26 @@ router.post(
 // Get All Schedules
 router.get('/', [auth, checkRole(['Admin', 'Content Manager', 'User'])], async (req, res) => {
   try {
-    const schedules = await Schedule.find().populate('contents').sort({ createdAt: -1 });
-    res.json(schedules);
+    console.log('Fetching schedules...');
+    const schedules = await Schedule.find().populate('contents dynamicContent').sort({ createdAt: -1 });
+    console.log('Schedules fetched:', schedules);
+
+    // Fetch current weather data (example API call for rule evaluation)
+    const currentWeather = await axios.get('http://api.weatherapi.com/v1/current.json', {
+      params: { key: process.env.WEATHER_API_KEY, q: 'London' }
+    });
+
+    // Evaluate and filter schedules based on rules
+    const activeSchedules = schedules.filter(schedule => {
+      if (schedule.rule) {
+        return evaluateRule(schedule.rule, currentWeather.data);
+      }
+      return true;
+    });
+
+    res.json(activeSchedules);
   } catch (err) {
-    console.error(err.message);
+    console.error('Error fetching schedules:', err);
     res.status(500).send('Server error');
   }
 });
@@ -55,7 +76,7 @@ router.get('/', [auth, checkRole(['Admin', 'Content Manager', 'User'])], async (
 // Get Schedule by ID
 router.get('/:id', [auth, checkRole(['Admin', 'Content Manager', 'User'])], async (req, res) => {
   try {
-    const schedule = await Schedule.findById(req.params.id).populate('contents');
+    const schedule = await Schedule.findById(req.params.id).populate('contents dynamicContent');
 
     if (!schedule) {
       return res.status(404).json({ msg: 'Schedule not found' });
@@ -80,6 +101,7 @@ router.put(
     [
       check('name', 'Name is required').not().isEmpty(),
       check('contentIds', 'Content IDs are required').isArray().notEmpty(),
+      check('dynamicContentIds', 'Dynamic Content IDs are required').isArray().notEmpty(),
     ],
   ],
   async (req, res) => {
@@ -88,7 +110,7 @@ router.put(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, contentIds } = req.body;
+    const { name, contentIds, dynamicContentIds, rule } = req.body;
 
     try {
       let schedule = await Schedule.findById(req.params.id);
@@ -99,9 +121,9 @@ router.put(
 
       schedule = await Schedule.findByIdAndUpdate(
         req.params.id,
-        { $set: { name, contents: contentIds } },
+        { $set: { name, contents: contentIds, dynamicContent: dynamicContentIds, rule } },
         { new: true }
-      ).populate('contents');
+      ).populate('contents dynamicContent');
 
       res.json(schedule);
     } catch (err) {

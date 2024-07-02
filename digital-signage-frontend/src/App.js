@@ -14,6 +14,8 @@ import Users from './components/Dashboard/Users';
 import ManageContent from './components/Dashboard/ManageContent';
 import CreateSchedule from './components/Dashboard/CreateSchedule';
 import ManageSchedules from './components/Dashboard/ManageSchedules';
+import DynamicData from './components/DynamicData';
+import ManageDynamicContent from './components/Dashboard/ManageDynamicContent';
 import Dashboard from './components/Dashboard/Dashboard';
 import AllDevices from './components/Devices/AllDevices';
 import UnapprovedDevices from './components/Devices/UnapprovedDevices';
@@ -24,7 +26,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const App = () => {
-  const token = localStorage.getItem('authToken'); // Updated to authToken
+  const token = localStorage.getItem('authToken');
   const role = localStorage.getItem('role');
 
   return (
@@ -40,6 +42,7 @@ const App = () => {
               <Route path="/content" element={<ContentList token={token} />} />
               <Route path="/create-content" element={<ContentForm token={token} />} />
               <Route path="/register-device" element={<DeviceRegistration />} />
+              <Route path="/dynamic-data" element={<DynamicData token={token} />} />
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="all-devices" element={<AllDevices />} />
@@ -50,7 +53,9 @@ const App = () => {
                 <Route path="manage-content" element={<ManageContent token={token} />} />
                 <Route path="create-schedule" element={<CreateSchedule token={token} />} />
                 <Route path="manage-schedules" element={<ManageSchedules token={token} />} />
+                <Route path="manage-dynamic-content" element={<ManageDynamicContent token={token} />} />
               </Route>
+              <Route path="/dynamic-content/:type" element={<DynamicData />} />
             </Routes>
             <ToastContainer />
           </ErrorBoundary>

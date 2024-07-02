@@ -1,4 +1,3 @@
-// src/components/Dashboard/Dashboard.js
 import React from 'react';
 import { Typography } from '@mui/material';
 

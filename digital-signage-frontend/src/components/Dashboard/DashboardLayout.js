@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemText, CssBaseline, Collapse, ListItemIcon } from '@mui/material';
+import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemText, CssBaseline, Collapse, ListItemIcon, Box } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import PeopleIcon from '@mui/icons-material/People';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -15,8 +15,8 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [openContentMenu, setOpenContentMenu] = useState(false);
-  const [openSchedulesMenu, setOpenSchedulesMenu] = useState(false);
   const [openDevicesMenu, setOpenDevicesMenu] = useState(false);
+  const [openSchedulesMenu, setOpenSchedulesMenu] = useState(false);
   const [role, setRole] = useState('');
   const [headerTitle, setHeaderTitle] = useState('Dashboard');
 
@@ -48,6 +48,9 @@ const DashboardLayout = () => {
       case 'unapproved-devices':
         setHeaderTitle('Devices');
         break;
+      case 'manage-dynamic-content':
+        setHeaderTitle('Manage Dynamic Content');
+        break;
       default:
         setHeaderTitle('Dashboard');
     }
@@ -57,12 +60,12 @@ const DashboardLayout = () => {
     setOpenContentMenu(!openContentMenu);
   };
 
-  const handleSchedulesClick = () => {
-    setOpenSchedulesMenu(!openSchedulesMenu);
-  };
-
   const handleDevicesClick = () => {
     setOpenDevicesMenu(!openDevicesMenu);
+  };
+
+  const handleSchedulesClick = () => {
+    setOpenSchedulesMenu(!openSchedulesMenu);
   };
 
   const handleSignOut = () => {
@@ -72,22 +75,28 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div style={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      <AppBar position="fixed" style={{ zIndex: 1300 }}>
+      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar>
-          <Typography variant="h6" noWrap>
+          <Typography variant="h6" noWrap component="div">
             {headerTitle}
           </Typography>
         </Toolbar>
       </AppBar>
       <Drawer
         variant="permanent"
-        style={{ width: drawerWidth, flexShrink: 0 }}
-        PaperProps={{ style: { width: drawerWidth } }}
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+          },
+        }}
       >
         <Toolbar />
-        <div style={{ overflow: 'auto' }}>
+        <Box sx={{ overflow: 'auto' }}>
           <List>
             <ListItem button component={Link} to="/dashboard">
               <ListItemIcon>
@@ -105,10 +114,10 @@ const DashboardLayout = () => {
             <Collapse in={openDevicesMenu} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
                 <ListItem button component={Link} to="/dashboard/all-devices">
-                  <ListItemText primary="All Devices" />
+                  <ListItemText primary="All Devices" sx={{ pl: 4 }} />
                 </ListItem>
                 <ListItem button component={Link} to="/dashboard/unapproved-devices">
-                  <ListItemText primary="Unapproved Devices" />
+                  <ListItemText primary="Unapproved Devices" sx={{ pl: 4 }} />
                 </ListItem>
               </List>
             </Collapse>
@@ -122,10 +131,10 @@ const DashboardLayout = () => {
             <Collapse in={openContentMenu} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
                 <ListItem button component={Link} to="/dashboard/upload-content">
-                  <ListItemText primary="Upload Content" />
+                  <ListItemText primary="Upload Content" sx={{ pl: 4 }} />
                 </ListItem>
                 <ListItem button component={Link} to="/dashboard/manage-content">
-                  <ListItemText primary="Manage Content" />
+                  <ListItemText primary="Manage Content" sx={{ pl: 4 }} />
                 </ListItem>
               </List>
             </Collapse>
@@ -139,13 +148,19 @@ const DashboardLayout = () => {
             <Collapse in={openSchedulesMenu} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
                 <ListItem button component={Link} to="/dashboard/create-schedule">
-                  <ListItemText primary="Create Schedule" />
+                  <ListItemText primary="Create Schedule" sx={{ pl: 4 }} />
                 </ListItem>
                 <ListItem button component={Link} to="/dashboard/manage-schedules">
-                  <ListItemText primary="Manage Schedules" />
+                  <ListItemText primary="Manage Schedules" sx={{ pl: 4 }} />
                 </ListItem>
               </List>
             </Collapse>
+            <ListItem button component={Link} to="/dashboard/manage-dynamic-content">
+              <ListItemIcon>
+                <ScheduleIcon />
+              </ListItemIcon>
+              <ListItemText primary="Manage Dynamic Content" />
+            </ListItem>
             {role === 'Admin' && (
               <ListItem button component={Link} to="/dashboard/users">
                 <ListItemIcon>
@@ -161,13 +176,16 @@ const DashboardLayout = () => {
               <ListItemText primary="Sign Out" />
             </ListItem>
           </List>
-        </div>
+        </Box>
       </Drawer>
-      <main style={{ flexGrow: 1, padding: '24px', marginLeft: drawerWidth }}>
+      <Box
+        component="main"
+        sx={{ flexGrow: 1, bgcolor: 'background.default', p: 3 }}
+      >
         <Toolbar />
         <Outlet />
-      </main>
-    </div>
+      </Box>
+    </Box>
   );
 };
 

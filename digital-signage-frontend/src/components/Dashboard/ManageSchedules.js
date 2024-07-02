@@ -1,5 +1,9 @@
+// src/components/Dashboard/ManageSchedules.js
+
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { getAllSchedules, updateSchedule, deleteSchedule } from '../../services/scheduleService';
+import { getAllContent } from '../../services/contentService';
+import { getAllDynamicContent } from '../../services/dynamicContentService';
 import { Table, TableBody, TableCell, TableHead, TableRow, Paper, Typography, Checkbox, Button, Modal, Box, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { makeStyles } from '@mui/styles';
@@ -23,7 +27,7 @@ const useStyles = makeStyles({
     overflow: 'auto',
   },
   closeButton: {
-    position: 'absolute !important', // Add !important to ensure it overrides other styles
+    position: 'absolute !important',
     top: '10px',
     right: '10px',
   },
@@ -32,10 +36,12 @@ const useStyles = makeStyles({
 const ManageSchedules = ({ token }) => {
   const classes = useStyles();
   const [schedules, setSchedules] = useState([]);
-  const [selected, setSelected] = useState([]);
+  const [selectedContentIds, setSelectedContentIds] = useState([]);
+  const [selectedDynamicContentIds, setSelectedDynamicContentIds] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState([]);
+  const [dynamicContent, setDynamicContent] = useState([]);
 
   useEffect(() => {
     const fetchSchedules = async () => {
@@ -44,52 +50,76 @@ const ManageSchedules = ({ token }) => {
           throw new Error('No auth token found in localStorage');
         }
 
-        const response = await axios.get('http://localhost:3000/api/schedule', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await getAllSchedules(token);
         setSchedules(response.data);
       } catch (error) {
-        console.error('Error fetching schedules', error.response?.data || error.message);
+        console.error('Error fetching schedules', error);
       }
     };
 
     const fetchContent = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/content', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setContent(response.data);
+        const response = await getAllContent(token);
+        setContent(response.data || []); // Ensure content is an array
       } catch (error) {
-        console.error('Error fetching content', error.response?.data || error.message);
+        console.error('Error fetching content', error);
+      }
+    };
+
+    const fetchDynamicContent = async () => {
+      try {
+        const response = await getAllDynamicContent(token);
+        setDynamicContent(response.data || []); // Ensure dynamicContent is an array
+      } catch (error) {
+        console.error('Error fetching dynamic content', error);
       }
     };
 
     fetchSchedules();
     fetchContent();
+    fetchDynamicContent();
   }, [token]);
 
-  const handleCheckboxClick = (id) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected = [];
+  const handleCheckboxClick = (id, isContent) => {
+    if (isContent) {
+      const selectedIndex = selectedContentIds.indexOf(id);
+      let newSelected = [];
 
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(selected.slice(0, selectedIndex), selected.slice(selectedIndex + 1));
+      if (selectedIndex === -1) {
+        newSelected = newSelected.concat(selectedContentIds, id);
+      } else if (selectedIndex === 0) {
+        newSelected = newSelected.concat(selectedContentIds.slice(1));
+      } else if (selectedIndex === selectedContentIds.length - 1) {
+        newSelected = newSelected.concat(selectedContentIds.slice(0, -1));
+      } else if (selectedIndex > 0) {
+        newSelected = newSelected.concat(selectedContentIds.slice(0, selectedIndex), selectedContentIds.slice(selectedIndex + 1));
+      }
+
+      setSelectedContentIds(newSelected);
+    } else {
+      const selectedIndex = selectedDynamicContentIds.indexOf(id);
+      let newSelected = [];
+
+      if (selectedIndex === -1) {
+        newSelected = newSelected.concat(selectedDynamicContentIds, id);
+      } else if (selectedIndex === 0) {
+        newSelected = newSelected.concat(selectedDynamicContentIds.slice(1));
+      } else if (selectedIndex === selectedDynamicContentIds.length - 1) {
+        newSelected = newSelected.concat(selectedDynamicContentIds.slice(0, -1));
+      } else if (selectedIndex > 0) {
+        newSelected = newSelected.concat(selectedDynamicContentIds.slice(0, selectedIndex), selectedDynamicContentIds.slice(selectedIndex + 1));
+      }
+
+      setSelectedDynamicContentIds(newSelected);
     }
-
-    setSelected(newSelected);
   };
 
-  const isSelected = (id) => selected.indexOf(id) !== -1;
+  const isSelected = (id, isContent) => isContent ? selectedContentIds.indexOf(id) !== -1 : selectedDynamicContentIds.indexOf(id) !== -1;
 
   const handleOpen = (schedule) => {
     setSelectedSchedule(schedule);
-    setSelected(schedule.contents.map((content) => content._id));
+    setSelectedContentIds(schedule.contents.map((content) => content._id));
+    setSelectedDynamicContentIds(schedule.dynamicContent.map((content) => content._id));
     setOpen(true);
   };
 
@@ -100,11 +130,7 @@ const ManageSchedules = ({ token }) => {
 
   const handleSaveSchedule = async () => {
     try {
-      await axios.put(
-        `http://localhost:3000/api/schedule/${selectedSchedule._id}`,
-        { name: selectedSchedule.name, contentIds: selected },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await updateSchedule(selectedSchedule._id, selectedSchedule.name, selectedContentIds, selectedDynamicContentIds, selectedSchedule.rule, token);
       handleClose();
     } catch (error) {
       console.error('Error updating schedule', error.response?.data || error.message);
@@ -113,11 +139,12 @@ const ManageSchedules = ({ token }) => {
 
   const handleDeleteSelected = async () => {
     try {
-      await axios.delete(`http://localhost:3000/api/schedule/${selected}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setSchedules(schedules.filter((schedule) => !selected.includes(schedule._id)));
-      setSelected([]);
+      for (const id of [...selectedContentIds, ...selectedDynamicContentIds]) {
+        await deleteSchedule(id, token);
+      }
+      setSchedules(schedules.filter((schedule) => !selectedContentIds.includes(schedule._id) && !selectedDynamicContentIds.includes(schedule._id)));
+      setSelectedContentIds([]);
+      setSelectedDynamicContentIds([]);
     } catch (error) {
       console.error('Error deleting schedule', error.response?.data || error.message);
     }
@@ -128,7 +155,7 @@ const ManageSchedules = ({ token }) => {
       <Typography variant="h4" gutterBottom>
         Manage Schedules
       </Typography>
-      <Button variant="contained" color="secondary" onClick={handleDeleteSelected} disabled={selected.length === 0}>
+      <Button variant="contained" color="secondary" onClick={handleDeleteSelected} disabled={[...selectedContentIds, ...selectedDynamicContentIds].length === 0}>
         Delete Selected
       </Button>
       <Table className={classes.table}>
@@ -136,14 +163,16 @@ const ManageSchedules = ({ token }) => {
           <TableRow>
             <TableCell padding="checkbox">
               <Checkbox
-                indeterminate={selected.length > 0 && selected.length < schedules.length}
-                checked={schedules.length > 0 && selected.length === schedules.length}
+                indeterminate={[...selectedContentIds, ...selectedDynamicContentIds].length > 0 && [...selectedContentIds, ...selectedDynamicContentIds].length < schedules.length}
+                checked={schedules.length > 0 && [...selectedContentIds, ...selectedDynamicContentIds].length === schedules.length}
                 onChange={(event) => {
                   if (event.target.checked) {
                     const newSelected = schedules.map((schedule) => schedule._id);
-                    setSelected(newSelected);
+                    setSelectedContentIds(newSelected);
+                    setSelectedDynamicContentIds(newSelected);
                   } else {
-                    setSelected([]);
+                    setSelectedContentIds([]);
+                    setSelectedDynamicContentIds([]);
                   }
                 }}
                 inputProps={{ 'aria-label': 'select all schedules' }}
@@ -156,18 +185,18 @@ const ManageSchedules = ({ token }) => {
         </TableHead>
         <TableBody>
           {schedules.map((schedule) => {
-            const isItemSelected = isSelected(schedule._id);
+            const isItemSelected = isSelected(schedule._id, true) || isSelected(schedule._id, false);
             return (
               <TableRow key={schedule._id} selected={isItemSelected}>
                 <TableCell padding="checkbox">
                   <Checkbox
                     checked={isItemSelected}
-                    onChange={() => handleCheckboxClick(schedule._id)}
+                    onChange={() => handleCheckboxClick(schedule._id, true)}
                     inputProps={{ 'aria-labelledby': `schedule-checkbox-${schedule._id}` }}
                   />
                 </TableCell>
                 <TableCell>{schedule.name}</TableCell>
-                <TableCell>{schedule.contents.map((content) => content.title).join(', ')}</TableCell>
+                <TableCell>{[...schedule.contents, ...schedule.dynamicContent].map((content) => content.title).join(', ')}</TableCell>
                 <TableCell>
                   <Button variant="contained" color="primary" onClick={() => handleOpen(schedule)}>
                     Edit
@@ -197,14 +226,14 @@ const ManageSchedules = ({ token }) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {content.map((item) => {
-                    const isItemSelected = isSelected(item._id);
+                  {[...(content || []), ...(dynamicContent || [])].map((item) => {
+                    const isItemSelected = isSelected(item._id, item.type === 'content');
                     return (
                       <TableRow key={item._id} selected={isItemSelected}>
                         <TableCell padding="checkbox">
                           <Checkbox
                             checked={isItemSelected}
-                            onChange={() => handleCheckboxClick(item._id)}
+                            onChange={() => handleCheckboxClick(item._id, item.type === 'content')}
                             inputProps={{ 'aria-labelledby': `content-checkbox-${item._id}` }}
                           />
                         </TableCell>
