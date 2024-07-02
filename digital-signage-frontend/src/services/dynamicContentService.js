@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api/dynamic-data'; // Corrected to match the endpoint
+const API_URL = 'http://localhost:3000/api/dynamic-content';
 
 export const getAllDynamicContent = async (token) => {
   const response = await axios.get(API_URL, {

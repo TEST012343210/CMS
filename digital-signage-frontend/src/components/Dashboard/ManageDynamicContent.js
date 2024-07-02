@@ -155,6 +155,7 @@ const ManageDynamicContent = ({ token }) => {
             <TableCell>Content Type</TableCell>
             <TableCell>API URL</TableCell>
             <TableCell>Update Interval</TableCell>
+            <TableCell>Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

@@ -6,8 +6,8 @@ const bodyParser = require('body-parser');
 const deviceRoutes = require('./routes/devices');
 const cors = require('cors');
 const path = require('path');
-const dynamicDataRoutes = require('./routes/dynamicDataRoutes'); // Add this line
-const fetchAndStoreData = require('./services/dataFetchService'); // Add this line
+const dynamicContentRoutes = require('./routes/dynamicDataRoutes'); // Correct route name
+const fetchAndStoreData = require('./services/dataFetchService');
 
 const app = express();
 
@@ -42,8 +42,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
 // Define Routes
 app.use('/api/users', require('./routes/users'));
 app.use('/api/content', require('./routes/content'));
-app.use('/api/schedule', require('./routes/schedule')); // Ensure this is correctly included
-app.use('/api/dynamic-data', dynamicDataRoutes); // Add this line
+app.use('/api/schedule', require('./routes/schedule'));
+app.use('/api/dynamic-content', dynamicContentRoutes); // Correct route name
 
 // Use the device routes
 app.use('/api/devices', deviceRoutes);

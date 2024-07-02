@@ -5,7 +5,7 @@ const DynamicContent = require('../models/DynamicContent'); // Ensure you have t
 require('dotenv').config(); // Load environment variables
 
 // Route to fetch dynamic data based on type
-router.get('/:type', async (req, res) => {
+router.get('/data/:type', async (req, res) => {
   const { type } = req.params;
   let url;
 
@@ -14,11 +14,6 @@ router.get('/:type', async (req, res) => {
       const city = req.query.city || 'London'; // You can change the default city
       url = `http://api.weatherapi.com/v1/current.json?key=${process.env.WEATHER_API_KEY}&q=${city}&aqi=no`;
       break;
-    // Remove or comment out the stocks case if not needed
-    // case 'stocks':
-    //   url = `https://api.example.com/stocks?apikey=${process.env.STOCKS_API_KEY}`;
-    //   break;
-    // Add more cases for different types if needed
     default:
       return res.status(400).json({ error: 'Invalid data type' });
   }
@@ -33,7 +28,7 @@ router.get('/:type', async (req, res) => {
 });
 
 // Route to fetch all dynamic content
-router.get('/', async (req, res) => {
+router.get('/dynamic-content', async (req, res) => {
   try {
     const dynamicContent = await DynamicContent.find();
     res.json(dynamicContent);
@@ -44,7 +39,7 @@ router.get('/', async (req, res) => {
 });
 
 // Route to add new dynamic content
-router.post('/', async (req, res) => {
+router.post('/dynamic-content', async (req, res) => {
   const { contentType, apiUrl, updateInterval } = req.body;
 
   try {
@@ -63,7 +58,7 @@ router.post('/', async (req, res) => {
 });
 
 // Route to update dynamic content
-router.put('/:id', async (req, res) => {
+router.put('/dynamic-content/:id', async (req, res) => {
   const { id } = req.params;
   const { contentType, apiUrl, updateInterval } = req.body;
 
@@ -82,7 +77,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Route to delete dynamic content
-router.delete('/:id', async (req, res) => {
+router.delete('/dynamic-content/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
