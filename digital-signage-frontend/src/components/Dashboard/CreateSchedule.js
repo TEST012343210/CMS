@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Paper, Typography, Button, Modal, Box, Checkbox, Table, TableBody, TableCell, TableHead, TableRow, IconButton, TextField } from '@mui/material';
+import { Paper, Typography, Button, Modal, Box, Checkbox, Table, TableBody, TableCell, TableHead, TableRow, IconButton, TextField, FormControlLabel } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { makeStyles } from '@mui/styles';
 
@@ -32,7 +32,9 @@ const useStyles = makeStyles({
 const CreateSchedule = ({ token }) => {
   const classes = useStyles();
   const [content, setContent] = useState([]);
-  const [selected, setSelected] = useState([]);
+  const [dynamicContent, setDynamicContent] = useState([]);
+  const [selectedContentIds, setSelectedContentIds] = useState([]);
+  const [selectedDynamicContentIds, setSelectedDynamicContentIds] = useState([]);
   const [open, setOpen] = useState(false);
   const [scheduleName, setScheduleName] = useState("");
 
@@ -43,10 +45,15 @@ const CreateSchedule = ({ token }) => {
           throw new Error('No auth token found in localStorage');
         }
 
-        const response = await axios.get('http://localhost:3000/api/content', {
+        const contentResponse = await axios.get('http://localhost:3000/api/content', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setContent(response.data);
+        setContent(contentResponse.data);
+
+        const dynamicContentResponse = await axios.get('http://localhost:3000/api/dynamic-content', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setDynamicContent(dynamicContentResponse.data);
       } catch (error) {
         console.error('Error fetching content', error.response?.data || error.message);
       }
@@ -55,24 +62,41 @@ const CreateSchedule = ({ token }) => {
     fetchContent();
   }, [token]);
 
-  const handleCheckboxClick = (id) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected = [];
+  const handleCheckboxClick = (id, isDynamic) => {
+    if (isDynamic) {
+      const selectedIndex = selectedDynamicContentIds.indexOf(id);
+      let newSelected = [];
 
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(selected.slice(0, selectedIndex), selected.slice(selectedIndex + 1));
+      if (selectedIndex === -1) {
+        newSelected = newSelected.concat(selectedDynamicContentIds, id);
+      } else if (selectedIndex === 0) {
+        newSelected = newSelected.concat(selectedDynamicContentIds.slice(1));
+      } else if (selectedIndex === selectedDynamicContentIds.length - 1) {
+        newSelected = newSelected.concat(selectedDynamicContentIds.slice(0, -1));
+      } else if (selectedIndex > 0) {
+        newSelected = newSelected.concat(selectedDynamicContentIds.slice(0, selectedIndex), selectedDynamicContentIds.slice(selectedIndex + 1));
+      }
+
+      setSelectedDynamicContentIds(newSelected);
+    } else {
+      const selectedIndex = selectedContentIds.indexOf(id);
+      let newSelected = [];
+
+      if (selectedIndex === -1) {
+        newSelected = newSelected.concat(selectedContentIds, id);
+      } else if (selectedIndex === 0) {
+        newSelected = newSelected.concat(selectedContentIds.slice(1));
+      } else if (selectedIndex === selectedContentIds.length - 1) {
+        newSelected = newSelected.concat(selectedContentIds.slice(0, -1));
+      } else if (selectedIndex > 0) {
+        newSelected = newSelected.concat(selectedContentIds.slice(0, selectedIndex), selectedContentIds.slice(selectedIndex + 1));
+      }
+
+      setSelectedContentIds(newSelected);
     }
-
-    setSelected(newSelected);
   };
 
-  const isSelected = (id) => selected.indexOf(id) !== -1;
+  const isSelected = (id, isDynamic) => isDynamic ? selectedDynamicContentIds.indexOf(id) !== -1 : selectedContentIds.indexOf(id) !== -1;
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -86,7 +110,7 @@ const CreateSchedule = ({ token }) => {
     try {
       await axios.post(
         'http://localhost:3000/api/schedule',
-        { name: scheduleName, contentIds: selected },
+        { name: scheduleName, contentIds: selectedContentIds, dynamicContentIds: selectedDynamicContentIds },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       handleClose();
@@ -131,14 +155,30 @@ const CreateSchedule = ({ token }) => {
             </TableHead>
             <TableBody>
               {content.map((item) => {
-                const isItemSelected = isSelected(item._id);
+                const isItemSelected = isSelected(item._id, false);
                 return (
                   <TableRow key={item._id} selected={isItemSelected}>
                     <TableCell padding="checkbox">
                       <Checkbox
                         checked={isItemSelected}
-                        onChange={() => handleCheckboxClick(item._id)}
+                        onChange={() => handleCheckboxClick(item._id, false)}
                         inputProps={{ 'aria-labelledby': `content-checkbox-${item._id}` }}
+                      />
+                    </TableCell>
+                    <TableCell>{item.title}</TableCell>
+                    <TableCell>{item.type}</TableCell>
+                  </TableRow>
+                );
+              })}
+              {dynamicContent.map((item) => {
+                const isItemSelected = isSelected(item._id, true);
+                return (
+                  <TableRow key={item._id} selected={isItemSelected}>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={isItemSelected}
+                        onChange={() => handleCheckboxClick(item._id, true)}
+                        inputProps={{ 'aria-labelledby': `dynamic-content-checkbox-${item._id}` }}
                       />
                     </TableCell>
                     <TableCell>{item.title}</TableCell>

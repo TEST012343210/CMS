@@ -1,4 +1,3 @@
-// src/components/Content/ContentList.js
 import React, { useEffect, useState } from 'react';
 import { getAllContent } from '../../services/contentService';
 
@@ -9,7 +8,7 @@ const ContentList = ({ token }) => {
     const fetchContent = async () => {
       try {
         const response = await getAllContent(token);
-        setContent(response.data);
+        setContent(response);
       } catch (error) {
         console.error('Error fetching content', error.response?.data || error.message);
       }
@@ -24,7 +23,7 @@ const ContentList = ({ token }) => {
       <ul>
         {content.map((item) => (
           <li key={item._id}>
-            {item.title} - {item.type} - <a href={item.url}>{item.url}</a>
+            {item.title} - {item.contentType} - {item.url ? <a href={item.url}>{item.url}</a> : 'No URL'}
           </li>
         ))}
       </ul>

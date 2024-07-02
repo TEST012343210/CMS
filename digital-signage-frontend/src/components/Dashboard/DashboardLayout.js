@@ -15,8 +15,8 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [openContentMenu, setOpenContentMenu] = useState(false);
-  const [openDevicesMenu, setOpenDevicesMenu] = useState(false);
   const [openSchedulesMenu, setOpenSchedulesMenu] = useState(false);
+  const [openDevicesMenu, setOpenDevicesMenu] = useState(false); // Added state for devices menu
   const [role, setRole] = useState('');
   const [headerTitle, setHeaderTitle] = useState('Dashboard');
 
@@ -48,9 +48,6 @@ const DashboardLayout = () => {
       case 'unapproved-devices':
         setHeaderTitle('Devices');
         break;
-      case 'manage-dynamic-content':
-        setHeaderTitle('Manage Dynamic Content');
-        break;
       default:
         setHeaderTitle('Dashboard');
     }
@@ -60,12 +57,12 @@ const DashboardLayout = () => {
     setOpenContentMenu(!openContentMenu);
   };
 
-  const handleDevicesClick = () => {
-    setOpenDevicesMenu(!openDevicesMenu);
-  };
-
   const handleSchedulesClick = () => {
     setOpenSchedulesMenu(!openSchedulesMenu);
+  };
+
+  const handleDevicesClick = () => {
+    setOpenDevicesMenu(!openDevicesMenu); // Toggle devices menu
   };
 
   const handleSignOut = () => {
@@ -104,23 +101,6 @@ const DashboardLayout = () => {
               </ListItemIcon>
               <ListItemText primary="Dashboard" />
             </ListItem>
-            <ListItem button onClick={handleDevicesClick}>
-              <ListItemIcon>
-                <DevicesIcon />
-              </ListItemIcon>
-              <ListItemText primary="Devices" />
-              {openDevicesMenu ? <ExpandLess /> : <ExpandMore />}
-            </ListItem>
-            <Collapse in={openDevicesMenu} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding>
-                <ListItem button component={Link} to="/dashboard/all-devices">
-                  <ListItemText primary="All Devices" sx={{ pl: 4 }} />
-                </ListItem>
-                <ListItem button component={Link} to="/dashboard/unapproved-devices">
-                  <ListItemText primary="Unapproved Devices" sx={{ pl: 4 }} />
-                </ListItem>
-              </List>
-            </Collapse>
             <ListItem button onClick={handleContentClick}>
               <ListItemIcon>
                 <FolderIcon />
@@ -155,12 +135,23 @@ const DashboardLayout = () => {
                 </ListItem>
               </List>
             </Collapse>
-            <ListItem button component={Link} to="/dashboard/manage-dynamic-content">
+            <ListItem button onClick={handleDevicesClick}>
               <ListItemIcon>
-                <ScheduleIcon />
+                <DevicesIcon />
               </ListItemIcon>
-              <ListItemText primary="Manage Dynamic Content" />
+              <ListItemText primary="Devices" />
+              {openDevicesMenu ? <ExpandLess /> : <ExpandMore />}
             </ListItem>
+            <Collapse in={openDevicesMenu} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem button component={Link} to="/dashboard/all-devices">
+                  <ListItemText primary="All Devices" sx={{ pl: 4 }} />
+                </ListItem>
+                <ListItem button component={Link} to="/dashboard/unapproved-devices">
+                  <ListItemText primary="Unapproved Devices" sx={{ pl: 4 }} />
+                </ListItem>
+              </List>
+            </Collapse>
             {role === 'Admin' && (
               <ListItem button component={Link} to="/dashboard/users">
                 <ListItemIcon>

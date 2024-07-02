@@ -1,4 +1,3 @@
-// routes/devices.js
 const express = require('express');
 const router = express.Router();
 const Device = require('../models/Device');
@@ -15,7 +14,6 @@ const logWithTimestamp = (message, requestId) => {
   console.log(`[${new Date().toISOString()}] [${requestId}] ${message}`);
 };
 
-// Generate a sequential unique identifier
 const generateUniqueIdentifier = async () => {
   const lastDevice = await Device.findOne().sort({ identifier: -1 }).exec();
   let lastNumber = 0;
@@ -31,11 +29,21 @@ const generateUniqueIdentifier = async () => {
   return newIdentifier;
 };
 
-// Register Device via GET request (for URL Launcher)
+const checkLicenseLimit = async (clientId) => {
+  const licenseLimit = 3; // Example limit, adjust accordingly
+  const deviceCount = await Device.countDocuments({ clientId, approved: true });
+  return deviceCount >= licenseLimit;
+};
+
 router.get('/register', async (req, res) => {
   const requestId = uuidv4();
   const requestIp = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   const currentTime = Date.now();
+  const clientId = req.query.clientId;
+
+  if (!clientId) {
+    return res.status(400).send('Client ID is required');
+  }
 
   logWithTimestamp(`Received GET request to /register from IP: ${requestIp}`, requestId);
 
@@ -49,12 +57,18 @@ router.get('/register', async (req, res) => {
   lock.acquire(REGISTRATION_KEY, async (done) => {
     logWithTimestamp('Lock acquired for /register', requestId);
     try {
+      if (await checkLicenseLimit(clientId)) {
+        logWithTimestamp('License limit reached for client.', requestId);
+        return res.status(403).send('License limit reached. Please purchase more licenses.');
+      }
+
       const newIdentifier = await generateUniqueIdentifier();
-      const code = Math.floor(100000 + Math.random() * 900000).toString(); // Generate 6-digit code
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
 
       logWithTimestamp(`Generated new identifier: ${newIdentifier}`, requestId);
 
       const device = new Device({
+        clientId,
         name: 'Unnamed Device',
         identifier: newIdentifier,
         approved: false,
@@ -66,7 +80,7 @@ router.get('/register', async (req, res) => {
       res.json({ identifier: newIdentifier, code: device.code });
     } catch (err) {
       logWithTimestamp(`Error during GET /register: ${err.message}`, requestId);
-      console.error('Stack trace:', err.stack); // Log stack trace
+      console.error('Stack trace:', err.stack);
       res.status(500).send('Server error');
     } finally {
       done();
@@ -119,6 +133,7 @@ router.get('/:id', [auth, checkRole(['Admin', 'Content Manager'])], async (req, 
 router.patch('/:id/approve', [auth, checkRole(['Admin'])], async (req, res) => {
   const requestId = uuidv4();
   const { name, locationId, code } = req.body;
+  const clientId = req.body.clientId; // Ensure clientId is passed in the request body
 
   try {
     const device = await Device.findById(req.params.id);
@@ -129,6 +144,10 @@ router.patch('/:id/approve', [auth, checkRole(['Admin'])], async (req, res) => {
     if (device.code !== code) {
       logWithTimestamp(`Incorrect code for device: ${req.params.id}`, requestId);
       return res.status(400).json({ msg: 'Incorrect code' });
+    }
+    if (await checkLicenseLimit(clientId)) {
+      logWithTimestamp('License limit reached for client.', requestId);
+      return res.status(403).json({ msg: 'License limit reached. Please purchase more licenses.' });
     }
     if (name) {
       device.name = name;
@@ -206,7 +225,7 @@ router.get('/test/sssp_config.xml', (req, res) => {
     <device>
       <name>Test Device</name>
       <identifier>TestDisplay</identifier>
-      <approved>false</approved>
+      <approved:false</approved>
     </device>
   </SamsungSmartSignagePlatform>`);
 });

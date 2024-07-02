@@ -1,4 +1,5 @@
-// models/Content.js
+// backend/models/Content.js
+
 const mongoose = require('mongoose');
 
 const ContentSchema = new mongoose.Schema({
@@ -8,7 +9,7 @@ const ContentSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['image', 'video', 'webpage', 'interactive', 'sssp_web_app', 'ftp', 'cifs', 'streaming'],
+    enum: ['image', 'video', 'webpage', 'interactive', 'sssp_web_app', 'ftp', 'cifs', 'streaming', 'dynamic'],
     required: true,
   },
   url: {
@@ -34,6 +35,12 @@ const ContentSchema = new mongoose.Schema({
   },
   streamingUrl: {
     type: String,
+  },
+  apiUrl: {
+    type: String,
+  },
+  updateInterval: {
+    type: Number,
   },
   createdAt: {
     type: Date,

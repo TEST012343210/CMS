@@ -16,7 +16,7 @@ const useStyles = makeStyles({
   },
 });
 
-const ContentForm = ({ token }) => {
+const UploadContent = ({ token }) => {
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const [contentType, setContentType] = useState('');
@@ -255,7 +255,6 @@ const ContentForm = ({ token }) => {
                 />
               </Box>
             )}
-            
             {contentType === 'streaming' && (
               <Box>
                 <TextField
@@ -279,4 +278,4 @@ const ContentForm = ({ token }) => {
   );
 };
 
-export default ContentForm;
+export default UploadContent;

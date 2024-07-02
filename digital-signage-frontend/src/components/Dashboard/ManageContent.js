@@ -1,7 +1,6 @@
-// ManageContent.js
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Table, TableBody, TableCell, TableHead, TableRow, Paper, Typography, Checkbox, Modal, Box, IconButton, Button } from '@mui/material';
+import { getAllContent, deleteContent } from '../../services/contentService';
+import { Button, Table, TableBody, TableCell, TableHead, TableRow, Paper, Typography, Checkbox, Modal, Box, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { makeStyles } from '@mui/styles';
 
@@ -40,7 +39,7 @@ const useStyles = makeStyles({
     overflow: 'auto',
   },
   closeButton: {
-    position: 'absolute !important', // Add !important to ensure it overrides other styles
+    position: 'absolute !important',
     top: '10px',
     right: '10px',
   },
@@ -59,14 +58,8 @@ const ManageContent = ({ token }) => {
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        if (!token) {
-          throw new Error('No auth token found in localStorage');
-        }
-
-        const response = await axios.get('http://localhost:3000/api/content', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setContent(response.data);
+        const response = await getAllContent(token);
+        setContent(response);
       } catch (error) {
         console.error('Error fetching content', error.response?.data || error.message);
       }
@@ -103,11 +96,9 @@ const ManageContent = ({ token }) => {
 
   const handleDeleteSelected = async () => {
     try {
-      await axios.put(
-        'http://localhost:3000/api/content/delete',
-        { ids: selected },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      for (const id of selected) {
+        await deleteContent(id, token);
+      }
       setContent(content.filter((item) => !selected.includes(item._id)));
       setSelected([]);
     } catch (error) {
@@ -164,7 +155,7 @@ const ManageContent = ({ token }) => {
                   />
                 </TableCell>
                 <TableCell className={classes.previewColumn}>
-                  {item.type === 'video' ? (
+                  {item.contentType === 'video' ? (
                     <video
                       className={classes.media}
                       controls
@@ -184,7 +175,7 @@ const ManageContent = ({ token }) => {
                   )}
                 </TableCell>
                 <TableCell>{item.title}</TableCell>
-                <TableCell>{item.type}</TableCell>
+                <TableCell>{item.contentType}</TableCell>
                 <TableCell>
                   <a href={item.file || item.url} target="_blank" rel="noopener noreferrer">
                     {item.file || item.url}

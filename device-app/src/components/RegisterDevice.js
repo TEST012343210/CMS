@@ -13,16 +13,8 @@ const RegisterDevice = () => {
     setLoading(true);
 
     try {
-      const storedToken = localStorage.getItem('authToken');
-      if (!storedToken) {
-        throw new Error('No auth token found in localStorage');
-      }
-
-      const response = await axios.get('http://localhost:3000/api/devices/register', {
-        headers: {
-          'Authorization': `Bearer ${storedToken}`
-        }
-      });
+      const clientId = 'TEST_CLIENT_ID'; // Replace this with the actual client ID
+      const response = await axios.get(`http://localhost:3000/api/devices/register?clientId=${clientId}`);
 
       console.log('Device registered successfully:', response.data);
       if (response.data && response.data.code) {
@@ -31,9 +23,9 @@ const RegisterDevice = () => {
       toast.success(`Device registered: ${response.data.identifier}`);
       setRegistered(true);
     } catch (error) {
-      if (error.response && error.response.status === 401) {
-        console.error('Authentication failed. Please log in again.');
-        toast.error('Authentication failed. Please log in again.');
+      if (error.response && error.response.status === 403) {
+        console.error('License limit reached.');
+        toast.error('License limit reached. Please purchase more licenses.');
       } else if (error.response && error.response.status === 429) {
         console.error('Too many requests. Please try again later.');
         toast.error('Too many requests. Please try again later.');
@@ -44,15 +36,7 @@ const RegisterDevice = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    if (token) {
-      localStorage.setItem('authToken', token);
-    }
-  }, []);
+  }, [loading]);
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100vh">

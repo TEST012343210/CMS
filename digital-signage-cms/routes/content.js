@@ -1,4 +1,5 @@
-// routes/content.js
+// backend/routes/content.js
+
 const express = require('express');
 const router = express.Router();
 const { check, validationResult } = require('express-validator');
@@ -27,8 +28,8 @@ router.post(
     upload.single('file'),
     [
       check('title', 'Title is required').not().isEmpty(),
-      check('type', 'Type is required').isIn([
-        'image', 'video', 'webpage', 'interactive', 'sssp_web_app', 'ftp', 'cifs', 'streaming'
+      check('contentType', 'Content Type is required').isIn([
+        'image', 'video', 'webpage', 'interactive', 'sssp-web-app', 'ftp', 'cifs', 'streaming', 'dynamic'
       ]),
     ],
   ],
@@ -41,7 +42,7 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, type, url, ssspUrl, ftpDetails, cifsDetails, streamingUrl } = req.body;
+    const { title, contentType, url, ssspUrl, ftpDetails, cifsDetails, streamingUrl, apiUrl, updateInterval } = req.body;
     let fileUrl = url;
 
     if (req.file) {
@@ -51,13 +52,15 @@ router.post(
     try {
       const newContent = new Content({
         title,
-        type,
-        url: type === 'webpage' ? url : undefined,
+        type: contentType,
+        url: contentType === 'webpage' ? url : undefined,
         file: req.file ? fileUrl : undefined,
-        ssspUrl: type === 'sssp_web_app' ? ssspUrl : undefined,
-        ftpDetails: type === 'ftp' ? JSON.parse(ftpDetails) : undefined,
-        cifsDetails: type === 'cifs' ? JSON.parse(cifsDetails) : undefined,
-        streamingUrl: type === 'streaming' ? streamingUrl : undefined,
+        ssspUrl: contentType === 'sssp-web-app' ? ssspUrl : undefined,
+        ftpDetails: contentType === 'ftp' ? JSON.parse(ftpDetails) : undefined,
+        cifsDetails: contentType === 'cifs' ? JSON.parse(cifsDetails) : undefined,
+        streamingUrl: contentType === 'streaming' ? streamingUrl : undefined,
+        apiUrl: contentType === 'dynamic' ? apiUrl : undefined,
+        updateInterval: contentType === 'dynamic' ? updateInterval : undefined,
         user: req.user.id,
       });
 
@@ -121,8 +124,8 @@ router.put(
     checkRole(['Admin', 'Content Manager']),
     [
       check('title', 'Title is required').not().isEmpty(),
-      check('type', 'Type is required').isIn([
-        'image', 'video', 'webpage', 'interactive', 'sssp_web_app', 'ftp', 'cifs', 'streaming'
+      check('contentType', 'Content Type is required').isIn([
+        'image', 'video', 'webpage', 'interactive', 'sssp-web-app', 'ftp', 'cifs', 'streaming', 'dynamic'
       ]),
     ],
   ],
@@ -132,7 +135,7 @@ router.put(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, type, url, ssspUrl, ftpDetails, cifsDetails, streamingUrl } = req.body;
+    const { title, contentType, url, ssspUrl, ftpDetails, cifsDetails, streamingUrl, apiUrl, updateInterval } = req.body;
 
     try {
       let content = await Content.findById(req.params.id);
@@ -150,12 +153,14 @@ router.put(
         {
           $set: {
             title,
-            type,
-            url: type === 'webpage' ? url : undefined,
-            ssspUrl: type === 'sssp_web_app' ? ssspUrl : undefined,
-            ftpDetails: type === 'ftp' ? JSON.parse(ftpDetails) : undefined,
-            cifsDetails: type === 'cifs' ? JSON.parse(cifsDetails) : undefined,
-            streamingUrl: type === 'streaming' ? streamingUrl : undefined,
+            type: contentType,
+            url: contentType === 'webpage' ? url : undefined,
+            ssspUrl: contentType === 'sssp-web-app' ? ssspUrl : undefined,
+            ftpDetails: contentType === 'ftp' ? JSON.parse(ftpDetails) : undefined,
+            cifsDetails: contentType === 'cifs' ? JSON.parse(cifsDetails) : undefined,
+            streamingUrl: contentType === 'streaming' ? streamingUrl : undefined,
+            apiUrl: contentType === 'dynamic' ? apiUrl : undefined,
+            updateInterval: contentType === 'dynamic' ? updateInterval : undefined,
           },
         },
         { new: true }

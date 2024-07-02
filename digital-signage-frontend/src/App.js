@@ -7,7 +7,7 @@ import theme from './theme';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import ContentList from './components/Content/ContentList';
-import ContentForm from './components/Content/ContentForm';
+import UploadContent from './components/Content/UploadContent';
 import Home from './components/Home';
 import DashboardLayout from './components/Dashboard/DashboardLayout';
 import Users from './components/Dashboard/Users';
@@ -40,7 +40,7 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/content" element={<ContentList token={token} />} />
-              <Route path="/create-content" element={<ContentForm token={token} />} />
+              <Route path="/upload-content" element={<UploadContent token={token} />} />
               <Route path="/register-device" element={<DeviceRegistration />} />
               <Route path="/dynamic-data" element={<DynamicData token={token} />} />
               <Route path="/dashboard" element={<DashboardLayout />}>
@@ -49,7 +49,7 @@ const App = () => {
                 <Route path="unapproved-devices" element={<UnapprovedDevices />} />
                 <Route path="manage-device/:id" element={<ManageDevice />} />
                 {role === 'Admin' && <Route path="users" element={<Users />} />}
-                <Route path="upload-content" element={<ContentForm token={token} />} />
+                <Route path="upload-content" element={<UploadContent token={token} />} />
                 <Route path="manage-content" element={<ManageContent token={token} />} />
                 <Route path="create-schedule" element={<CreateSchedule token={token} />} />
                 <Route path="manage-schedules" element={<ManageSchedules token={token} />} />

@@ -1,5 +1,3 @@
-// src/components/Dashboard/ManageSchedules.js
-
 import React, { useEffect, useState } from 'react';
 import { getAllSchedules, updateSchedule, deleteSchedule } from '../../services/scheduleService';
 import { getAllContent } from '../../services/contentService';
@@ -47,11 +45,12 @@ const ManageSchedules = ({ token }) => {
     const fetchSchedules = async () => {
       try {
         if (!token) {
-          throw new Error('No auth token found in localStorage');
+          throw new Error('No auth token found');
         }
 
         const response = await getAllSchedules(token);
-        setSchedules(response.data);
+        console.log('Fetched Schedules:', response);
+        setSchedules(response || []); // Ensure schedules is an array
       } catch (error) {
         console.error('Error fetching schedules', error);
       }
@@ -60,7 +59,8 @@ const ManageSchedules = ({ token }) => {
     const fetchContent = async () => {
       try {
         const response = await getAllContent(token);
-        setContent(response.data || []); // Ensure content is an array
+        console.log('Fetched Content:', response);
+        setContent(response || []); // Ensure content is an array
       } catch (error) {
         console.error('Error fetching content', error);
       }
@@ -69,7 +69,8 @@ const ManageSchedules = ({ token }) => {
     const fetchDynamicContent = async () => {
       try {
         const response = await getAllDynamicContent(token);
-        setDynamicContent(response.data || []); // Ensure dynamicContent is an array
+        console.log('Fetched Dynamic Content:', response);
+        setDynamicContent(response || []); // Ensure dynamicContent is an array
       } catch (error) {
         console.error('Error fetching dynamic content', error);
       }
@@ -116,14 +117,14 @@ const ManageSchedules = ({ token }) => {
 
   const isSelected = (id, isContent) => isContent ? selectedContentIds.indexOf(id) !== -1 : selectedDynamicContentIds.indexOf(id) !== -1;
 
-  const handleOpen = (schedule) => {
+  const handleOpenModal = (schedule) => {
     setSelectedSchedule(schedule);
     setSelectedContentIds(schedule.contents.map((content) => content._id));
     setSelectedDynamicContentIds(schedule.dynamicContent.map((content) => content._id));
     setOpen(true);
   };
 
-  const handleClose = () => {
+  const handleCloseModal = () => {
     setOpen(false);
     setSelectedSchedule(null);
   };
@@ -131,7 +132,7 @@ const ManageSchedules = ({ token }) => {
   const handleSaveSchedule = async () => {
     try {
       await updateSchedule(selectedSchedule._id, selectedSchedule.name, selectedContentIds, selectedDynamicContentIds, selectedSchedule.rule, token);
-      handleClose();
+      handleCloseModal();
     } catch (error) {
       console.error('Error updating schedule', error.response?.data || error.message);
     }
@@ -139,10 +140,10 @@ const ManageSchedules = ({ token }) => {
 
   const handleDeleteSelected = async () => {
     try {
-      for (const id of [...selectedContentIds, ...selectedDynamicContentIds]) {
+      for (const id of selectedContentIds) {
         await deleteSchedule(id, token);
       }
-      setSchedules(schedules.filter((schedule) => !selectedContentIds.includes(schedule._id) && !selectedDynamicContentIds.includes(schedule._id)));
+      setSchedules(schedules.filter((schedule) => !selectedContentIds.includes(schedule._id)));
       setSelectedContentIds([]);
       setSelectedDynamicContentIds([]);
     } catch (error) {
@@ -155,7 +156,7 @@ const ManageSchedules = ({ token }) => {
       <Typography variant="h4" gutterBottom>
         Manage Schedules
       </Typography>
-      <Button variant="contained" color="secondary" onClick={handleDeleteSelected} disabled={[...selectedContentIds, ...selectedDynamicContentIds].length === 0}>
+      <Button variant="contained" color="secondary" onClick={handleDeleteSelected} disabled={selectedContentIds.length === 0}>
         Delete Selected
       </Button>
       <Table className={classes.table}>
@@ -163,8 +164,8 @@ const ManageSchedules = ({ token }) => {
           <TableRow>
             <TableCell padding="checkbox">
               <Checkbox
-                indeterminate={[...selectedContentIds, ...selectedDynamicContentIds].length > 0 && [...selectedContentIds, ...selectedDynamicContentIds].length < schedules.length}
-                checked={schedules.length > 0 && [...selectedContentIds, ...selectedDynamicContentIds].length === schedules.length}
+                indeterminate={selectedContentIds.length > 0 && selectedContentIds.length < schedules.length}
+                checked={schedules.length > 0 && selectedContentIds.length === schedules.length}
                 onChange={(event) => {
                   if (event.target.checked) {
                     const newSelected = schedules.map((schedule) => schedule._id);
@@ -198,7 +199,7 @@ const ManageSchedules = ({ token }) => {
                 <TableCell>{schedule.name}</TableCell>
                 <TableCell>{[...schedule.contents, ...schedule.dynamicContent].map((content) => content.title).join(', ')}</TableCell>
                 <TableCell>
-                  <Button variant="contained" color="primary" onClick={() => handleOpen(schedule)}>
+                  <Button variant="contained" color="primary" onClick={() => handleOpenModal(schedule)}>
                     Edit
                   </Button>
                 </TableCell>
@@ -207,9 +208,9 @@ const ManageSchedules = ({ token }) => {
           })}
         </TableBody>
       </Table>
-      <Modal open={open} onClose={handleClose} className={classes.modal}>
+      <Modal open={open} onClose={handleCloseModal} className={classes.modal}>
         <Box className={classes.modalContent}>
-          <IconButton className={classes.closeButton} onClick={handleClose}>
+          <IconButton className={classes.closeButton} onClick={handleCloseModal}>
             <CloseIcon />
           </IconButton>
           {selectedSchedule && (

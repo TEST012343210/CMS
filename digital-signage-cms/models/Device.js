@@ -1,7 +1,10 @@
-// models/Device.js
 const mongoose = require('mongoose');
 
 const DeviceSchema = new mongoose.Schema({
+  clientId: {
+    type: String,
+    required: true,
+  },
   name: {
     type: String,
     required: true,
@@ -20,7 +23,7 @@ const DeviceSchema = new mongoose.Schema({
     required: true,
   },
   locationId: {
-    type: String, // Add this field
+    type: String,
   },
   createdAt: {
     type: Date,
