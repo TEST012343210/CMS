@@ -63,3 +63,15 @@ export const deleteContent = async (ids, token) => {
     throw error;
   }
 };
+
+export const getDynamicContent = async (contentId, token) => {
+  try {
+    const response = await axios.get(`${API_URL}/dynamic/${contentId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching dynamic content', error.response?.data || error.message);
+    throw error;
+  }
+};

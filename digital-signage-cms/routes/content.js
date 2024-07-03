@@ -1,5 +1,3 @@
-// backend/routes/content.js
-
 const express = require('express');
 const router = express.Router();
 const { check, validationResult } = require('express-validator');
@@ -8,6 +6,7 @@ const checkRole = require('../middlewares/checkRole');
 const Content = require('../models/Content');
 const multer = require('multer');
 const path = require('path');
+const axios = require('axios');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -31,6 +30,7 @@ router.post(
       check('contentType', 'Content Type is required').isIn([
         'image', 'video', 'webpage', 'interactive', 'sssp-web-app', 'ftp', 'cifs', 'streaming', 'dynamic'
       ]),
+      check('updateInterval', 'Update Interval is required for dynamic content').if(check('contentType').equals('dynamic')).not().isEmpty(),
     ],
   ],
   async (req, res) => {
@@ -50,6 +50,12 @@ router.post(
     }
 
     try {
+      let data = null;
+      if (contentType === 'dynamic' && apiUrl) {
+        const response = await axios.get(apiUrl);
+        data = response.data;
+      }
+
       const newContent = new Content({
         title,
         type: contentType,
@@ -61,11 +67,15 @@ router.post(
         streamingUrl: contentType === 'streaming' ? streamingUrl : undefined,
         apiUrl: contentType === 'dynamic' ? apiUrl : undefined,
         updateInterval: contentType === 'dynamic' ? updateInterval : undefined,
+        lastFetched: contentType === 'dynamic' ? new Date() : undefined,
+        data: contentType === 'dynamic' ? data : undefined,
         user: req.user.id,
+        previewImageUrl: req.file ? fileUrl : undefined,
       });
 
       const content = await newContent.save();
       console.log('Content saved:', content);
+
       res.json(content);
     } catch (err) {
       console.error(err.message);
@@ -117,6 +127,21 @@ router.get('/:id', [auth, checkRole(['Admin', 'Content Manager', 'User'])], asyn
   }
 });
 
+router.get('/dynamic/:id', [auth, checkRole(['Admin', 'Content Manager', 'User'])], async (req, res) => {
+  try {
+    const dynamicContent = await Content.findById(req.params.id);
+
+    if (!dynamicContent || dynamicContent.type !== 'dynamic') {
+      return res.status(404).json({ msg: 'Dynamic content not found' });
+    }
+
+    res.json(dynamicContent);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
 router.put(
   '/:id',
   [
@@ -148,6 +173,12 @@ router.put(
         return res.status(401).json({ msg: 'User not authorized' });
       }
 
+      let data = content.data;
+      if (contentType === 'dynamic' && apiUrl && apiUrl !== content.apiUrl) {
+        const response = await axios.get(apiUrl);
+        data = response.data;
+      }
+
       content = await Content.findByIdAndUpdate(
         req.params.id,
         {
@@ -161,6 +192,9 @@ router.put(
             streamingUrl: contentType === 'streaming' ? streamingUrl : undefined,
             apiUrl: contentType === 'dynamic' ? apiUrl : undefined,
             updateInterval: contentType === 'dynamic' ? updateInterval : undefined,
+            lastFetched: contentType === 'dynamic' ? new Date() : undefined,
+            data: contentType === 'dynamic' ? data : undefined,
+            previewImageUrl: content.previewImageUrl,
           },
         },
         { new: true }

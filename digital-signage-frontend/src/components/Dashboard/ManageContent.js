@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAllContent, deleteContent } from '../../services/contentService';
+import { getAllContent, deleteContent, getDynamicContent } from '../../services/contentService';
 import { Button, Table, TableBody, TableCell, TableHead, TableRow, Paper, Typography, Checkbox, Modal, Box, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { makeStyles } from '@mui/styles';
@@ -47,13 +47,25 @@ const useStyles = makeStyles({
     maxWidth: '100%',
     maxHeight: '100%',
   },
+  dynamicContent: {
+    whiteSpace: 'pre-wrap',
+  },
+  weatherInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    '& img': {
+      width: 64,
+      height: 64,
+    },
+  },
 });
 
 const ManageContent = ({ token }) => {
   const classes = useStyles();
   const [content, setContent] = useState([]);
   const [selected, setSelected] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedContent, setSelectedContent] = useState(null);
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -96,9 +108,7 @@ const ManageContent = ({ token }) => {
 
   const handleDeleteSelected = async () => {
     try {
-      for (const id of selected) {
-        await deleteContent(id, token);
-      }
+      await deleteContent(selected, token);
       setContent(content.filter((item) => !selected.includes(item._id)));
       setSelected([]);
     } catch (error) {
@@ -108,12 +118,69 @@ const ManageContent = ({ token }) => {
 
   const isSelected = (id) => selected.indexOf(id) !== -1;
 
-  const handleImageClick = (url) => {
-    setSelectedImage(url);
+  const handleImageClick = async (content) => {
+    if (content.type === 'dynamic') {
+      try {
+        const response = await getDynamicContent(content._id, token);
+        setSelectedContent({ ...content, dynamicData: response.data });
+      } catch (error) {
+        console.error('Error fetching dynamic content', error.response?.data || error.message);
+      }
+    } else {
+      setSelectedContent(content);
+    }
   };
 
   const handleCloseModal = () => {
-    setSelectedImage(null);
+    setSelectedContent(null);
+  };
+
+  const renderPreview = (item) => {
+    if (item.type === 'dynamic') {
+      return (
+        <img
+          src="/dynamic-content-default-preview.jpg"
+          alt="Dynamic Content"
+          className={classes.media}
+          onClick={() => handleImageClick(item)}
+          onError={(e) => e.target.style.display = 'none'}
+        />
+      );
+    }
+
+    return item.type === 'video' ? (
+      <video
+        className={classes.media}
+        controls
+        onClick={() => handleImageClick(item)}
+      >
+        <source src={item.url} type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    ) : (
+      <img
+        src={item.previewImageUrl || item.file || item.url || ''}
+        alt={item.title}
+        className={classes.media}
+        onClick={() => handleImageClick(item)}
+        onError={(e) => e.target.style.display = 'none'}
+      />
+    );
+  };
+
+  const renderDynamicContent = (data) => {
+    if (!data || !data.location || !data.current) return null;
+
+    return (
+      <div className={classes.weatherInfo}>
+        <Typography variant="h6">Weather in {data.location.name}</Typography>
+        <Typography variant="body1">{data.current.condition.text}</Typography>
+        <img src={`http:${data.current.condition.icon}`} alt={data.current.condition.text} />
+        <Typography variant="body1">Temperature: {data.current.temp_c}°C</Typography>
+        <Typography variant="body1">Wind: {data.current.wind_kph} kph {data.current.wind_dir}</Typography>
+        <Typography variant="body1">Humidity: {data.current.humidity}%</Typography>
+      </div>
+    );
   };
 
   return (
@@ -155,27 +222,10 @@ const ManageContent = ({ token }) => {
                   />
                 </TableCell>
                 <TableCell className={classes.previewColumn}>
-                  {item.contentType === 'video' ? (
-                    <video
-                      className={classes.media}
-                      controls
-                      onClick={() => handleImageClick(item.url)}
-                    >
-                      <source src={item.url} type="video/mp4" />
-                      Your browser does not support the video tag.
-                    </video>
-                  ) : (
-                    <img
-                      src={item.file || item.url}
-                      alt={item.title}
-                      className={classes.media}
-                      onClick={() => handleImageClick(item.file || item.url)}
-                      onError={(e) => e.target.style.display = 'none'} // Hide broken image icon
-                    />
-                  )}
+                  {renderPreview(item)}
                 </TableCell>
                 <TableCell>{item.title}</TableCell>
-                <TableCell>{item.contentType}</TableCell>
+                <TableCell>{item.type}</TableCell>
                 <TableCell>
                   <a href={item.file || item.url} target="_blank" rel="noopener noreferrer">
                     {item.file || item.url}
@@ -186,12 +236,21 @@ const ManageContent = ({ token }) => {
           })}
         </TableBody>
       </Table>
-      <Modal open={!!selectedImage} onClose={handleCloseModal} className={classes.modal}>
+      <Modal open={!!selectedContent} onClose={handleCloseModal} className={classes.modal}>
         <Box className={classes.modalContent}>
           <IconButton className={classes.closeButton} onClick={handleCloseModal}>
             <CloseIcon />
           </IconButton>
-          <img src={selectedImage} alt="Preview" className={classes.modalImage} />
+          {selectedContent?.type === 'dynamic' ? (
+            renderDynamicContent(selectedContent.dynamicData)
+          ) : selectedContent?.type === 'video' ? (
+            <video className={classes.modalImage} controls>
+              <source src={selectedContent.url} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <img src={selectedContent?.previewImageUrl || selectedContent?.file || selectedContent?.url || ''} alt="Preview" className={classes.modalImage} />
+          )}
         </Box>
       </Modal>
     </Paper>

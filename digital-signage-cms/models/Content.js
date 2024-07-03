@@ -1,5 +1,3 @@
-// backend/models/Content.js
-
 const mongoose = require('mongoose');
 
 const ContentSchema = new mongoose.Schema({
@@ -41,6 +39,15 @@ const ContentSchema = new mongoose.Schema({
   },
   updateInterval: {
     type: Number,
+    required: function() {
+      return this.type === 'dynamic';
+    },
+  },
+  lastFetched: {
+    type: Date,
+  },
+  data: {
+    type: mongoose.Schema.Types.Mixed,
   },
   createdAt: {
     type: Date,
@@ -49,6 +56,9 @@ const ContentSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
+  },
+  previewImageUrl: {
+    type: String,
   },
 });
 
