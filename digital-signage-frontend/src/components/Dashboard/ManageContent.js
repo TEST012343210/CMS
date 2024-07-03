@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { getAllContent, deleteContent, getDynamicContent } from '../../services/contentService';
-import { Button, Table, TableBody, TableCell, TableHead, TableRow, Paper, Typography, Checkbox, Modal, Box, IconButton } from '@mui/material';
+import { getAllContent, deleteContent, getDynamicContent, updateContent } from '../../services/contentService';
+import { Button, Table, TableBody, TableCell, TableHead, TableRow, Paper, Typography, Checkbox, Modal, Box, IconButton, TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { makeStyles } from '@mui/styles';
 
@@ -59,6 +59,12 @@ const useStyles = makeStyles({
       height: 64,
     },
   },
+  formControl: {
+    marginTop: 16,
+  },
+  textField: {
+    marginTop: 16,
+  },
 });
 
 const ManageContent = ({ token }) => {
@@ -66,6 +72,7 @@ const ManageContent = ({ token }) => {
   const [content, setContent] = useState([]);
   const [selected, setSelected] = useState([]);
   const [selectedContent, setSelectedContent] = useState(null);
+  const [editContent, setEditContent] = useState(null);
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -131,8 +138,43 @@ const ManageContent = ({ token }) => {
     }
   };
 
+  const handleEditClick = (content) => {
+    setEditContent(content);
+  };
+
   const handleCloseModal = () => {
     setSelectedContent(null);
+    setEditContent(null);
+  };
+
+  const handleEditChange = (event) => {
+    const { name, value } = event.target;
+    setEditContent((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleEditSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const updatedContent = {
+        ...editContent,
+        type: editContent.type,
+        title: editContent.title,
+        url: editContent.url,
+        apiUrl: editContent.apiUrl,
+        updateInterval: editContent.updateInterval,
+      };
+      await updateContent(editContent._id, updatedContent, token);
+      setContent((prevContent) =>
+        prevContent.map((item) => (item._id === editContent._id ? { ...editContent, ...updatedContent } : item))
+      );
+      setEditContent(null);
+      setSelectedContent(null);
+    } catch (error) {
+      console.error('Error updating content', error.response?.data || error.message);
+    }
   };
 
   const renderPreview = (item) => {
@@ -207,6 +249,7 @@ const ManageContent = ({ token }) => {
             <TableCell>Title</TableCell>
             <TableCell>Type</TableCell>
             <TableCell>URL</TableCell>
+            <TableCell>Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -231,6 +274,11 @@ const ManageContent = ({ token }) => {
                     {item.file || item.url}
                   </a>
                 </TableCell>
+                <TableCell>
+                  <Button variant="contained" color="primary" onClick={() => handleEditClick(item)}>
+                    Edit
+                  </Button>
+                </TableCell>
               </TableRow>
             );
           })}
@@ -251,6 +299,73 @@ const ManageContent = ({ token }) => {
           ) : (
             <img src={selectedContent?.previewImageUrl || selectedContent?.file || selectedContent?.url || ''} alt="Preview" className={classes.modalImage} />
           )}
+        </Box>
+      </Modal>
+      <Modal open={!!editContent} onClose={handleCloseModal} className={classes.modal}>
+        <Box className={classes.modalContent} component="form" onSubmit={handleEditSubmit}>
+          <IconButton className={classes.closeButton} onClick={handleCloseModal}>
+            <CloseIcon />
+          </IconButton>
+          <Typography variant="h6" gutterBottom>
+            Edit Content
+          </Typography>
+          <TextField
+            label="Title"
+            name="title"
+            value={editContent?.title || ''}
+            onChange={handleEditChange}
+            fullWidth
+            className={classes.textField}
+          />
+          <FormControl fullWidth className={classes.formControl}>
+            <InputLabel>Content Type</InputLabel>
+            <Select
+              name="type"
+              value={editContent?.type || ''}
+              onChange={handleEditChange}
+            >
+              <MenuItem value="image">Image</MenuItem>
+              <MenuItem value="video">Video</MenuItem>
+              <MenuItem value="webpage">Webpage</MenuItem>
+              <MenuItem value="interactive">Interactive</MenuItem>
+              <MenuItem value="sssp-web-app">SSSP Web App</MenuItem>
+              <MenuItem value="ftp">FTP</MenuItem>
+              <MenuItem value="cifs">CIFS</MenuItem>
+              <MenuItem value="streaming">Streaming</MenuItem>
+              <MenuItem value="dynamic">Dynamic</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField
+            label="URL"
+            name="url"
+            value={editContent?.url || ''}
+            onChange={handleEditChange}
+            fullWidth
+            className={classes.textField}
+          />
+          {editContent?.type === 'dynamic' && (
+            <>
+              <TextField
+                label="API URL"
+                name="apiUrl"
+                value={editContent?.apiUrl || ''}
+                onChange={handleEditChange}
+                fullWidth
+                className={classes.textField}
+              />
+              <TextField
+                label="Update Interval (minutes)"
+                name="updateInterval"
+                value={editContent?.updateInterval || ''}
+                onChange={handleEditChange}
+                fullWidth
+                className={classes.textField}
+              />
+            </>
+          )}
+          <Button variant="contained" color="primary" type="submit" className={classes.textField}>
+            Save
+          </Button>
         </Box>
       </Modal>
     </Paper>

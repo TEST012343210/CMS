@@ -1,5 +1,3 @@
-// frontend/src/services/contentService.js
-
 import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/api/content';
@@ -31,11 +29,11 @@ export const createContent = async (formData, token) => {
   }
 };
 
-export const updateContent = async (id, formData, token) => {
+export const updateContent = async (id, contentData, token) => {
   try {
-    const response = await axios.put(`${API_URL}/${id}`, formData, {
+    const response = await axios.put(`${API_URL}/${id}`, contentData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
     });

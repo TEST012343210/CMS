@@ -169,10 +169,6 @@ router.put(
         return res.status(404).json({ msg: 'Content not found' });
       }
 
-      if (content.user.toString() !== req.user.id) {
-        return res.status(401).json({ msg: 'User not authorized' });
-      }
-
       let data = content.data;
       if (contentType === 'dynamic' && apiUrl && apiUrl !== content.apiUrl) {
         const response = await axios.get(apiUrl);

@@ -45,6 +45,7 @@ const ContentSchema = new mongoose.Schema({
   },
   lastFetched: {
     type: Date,
+    default: Date.now,
   },
   data: {
     type: mongoose.Schema.Types.Mixed,

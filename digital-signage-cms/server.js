@@ -1,3 +1,5 @@
+// backend/server.js
+
 require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
@@ -5,13 +7,9 @@ const connectDB = require('./config/db');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const fetchAndStoreData = require('./services/dataFetchService');
+const startScheduler = require('./scheduler'); // Correct import for scheduler
 
 const app = express();
-
-// Import routes
-const deviceRoutes = require('./routes/devices');
-const dynamicContentRoutes = require('./routes/dynamicContent');
 
 // Connect Database
 connectDB();
@@ -45,8 +43,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
 app.use('/api/users', require('./routes/users'));
 app.use('/api/content', require('./routes/content'));
 app.use('/api/schedule', require('./routes/schedule'));
-app.use('/api/dynamic-content', dynamicContentRoutes);
-app.use('/api/devices', deviceRoutes);
+app.use('/api/dynamic-content', require('./routes/dynamicContent'));
+app.use('/api/devices', require('./routes/devices'));
 
 // Define a simple route for the root URL
 app.get('/', (req, res) => {
@@ -59,3 +57,6 @@ const HOST = '0.0.0.0'; // Listen on all network interfaces
 app.listen(PORT, HOST, () => {
   console.log(`Server is running on http://${HOST}:${PORT}`);
 });
+
+// Start the scheduler
+startScheduler();
