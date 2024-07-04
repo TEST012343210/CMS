@@ -1,4 +1,0 @@
-{
-  "mongoURI": "mongodb://Georgi:Tarzan898!@localhost:27017/digital-signage-cms",
-  "updateIntervalMinutes": 1
-}
