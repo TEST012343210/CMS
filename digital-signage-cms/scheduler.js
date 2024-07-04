@@ -1,16 +1,15 @@
-// backend/scheduler.js
-
 const cron = require('node-cron');
 const axios = require('axios');
 const mongoose = require('mongoose');
 const config = require('config');
 const Content = require('./models/Content');
 
-const db = config.get('mongoURI'); // Use config to get the MongoDB URI
-const updateIntervalMinutes = config.get('updateIntervalMinutes'); // Get update interval from config
+const db = config.get('mongoURI');
+const updateIntervalMinutes = config.get('updateIntervalMinutes');
 
 mongoose.connect(db, {
-  // Removed deprecated options
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 }).then(() => {
   console.log('MongoDB connected for scheduler');
 }).catch((err) => {
@@ -27,16 +26,27 @@ const updateDynamicContent = async () => {
       const lastFetched = new Date(content.lastFetched);
       const minutesSinceLastFetch = (now - lastFetched) / (1000 * 60);
 
+      console.log(`Checking content: ${content.title}, last fetched: ${content.lastFetched}, minutes since last fetch: ${minutesSinceLastFetch}`);
+
       if (minutesSinceLastFetch >= content.updateInterval) {
+        console.log(`Updating content: ${content.title} with interval ${content.updateInterval} minutes.`);
         try {
           const response = await axios.get(content.apiUrl);
           content.data = response.data;
           content.lastFetched = now;
+      
+          // Force Mongoose to recognize changes
+          content.markModified('data');
+          content.markModified('lastFetched');
+      
           await content.save();
-          console.log(`Updated content for ${content.title}`);
+          console.log(`Successfully updated content for ${content.title}`);
+          
         } catch (err) {
           console.error(`Error fetching data for ${content.title}:`, err.message);
         }
+      } else {
+        console.log(`No update needed for ${content.title} (Interval: ${content.updateInterval}, Minutes since last fetch: ${minutesSinceLastFetch})`);
       }
     }
   } catch (err) {

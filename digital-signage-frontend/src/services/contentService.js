@@ -31,12 +31,14 @@ export const createContent = async (formData, token) => {
 
 export const updateContent = async (id, contentData, token) => {
   try {
+    console.log(`Updating content with ID: ${id}`, contentData);
     const response = await axios.put(`${API_URL}/${id}`, contentData, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
     });
+    console.log('Update content response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error updating content', error.response?.data || error.message);

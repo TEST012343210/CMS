@@ -157,18 +157,23 @@ const ManageContent = ({ token }) => {
 
   const handleEditSubmit = async (event) => {
     event.preventDefault();
+    console.log('Edit form submitted');
+    console.log('Edit content data:', editContent);
+  
     try {
       const updatedContent = {
-        ...editContent,
-        type: editContent.type,
         title: editContent.title,
+        type: editContent.type,
         url: editContent.url,
         apiUrl: editContent.apiUrl,
         updateInterval: editContent.updateInterval,
       };
+  
+      console.log('Updated content to be sent:', updatedContent);
+  
       await updateContent(editContent._id, updatedContent, token);
       setContent((prevContent) =>
-        prevContent.map((item) => (item._id === editContent._id ? { ...editContent, ...updatedContent } : item))
+        prevContent.map((item) => (item._id === editContent._id ? { ...item, ...updatedContent } : item))
       );
       setEditContent(null);
       setSelectedContent(null);
@@ -176,7 +181,7 @@ const ManageContent = ({ token }) => {
       console.error('Error updating content', error.response?.data || error.message);
     }
   };
-
+  
   const renderPreview = (item) => {
     if (item.type === 'dynamic') {
       return (

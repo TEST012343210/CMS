@@ -149,18 +149,22 @@ router.put(
     checkRole(['Admin', 'Content Manager']),
     [
       check('title', 'Title is required').not().isEmpty(),
-      check('contentType', 'Content Type is required').isIn([
+      check('type', 'Content Type is required').isIn([
         'image', 'video', 'webpage', 'interactive', 'sssp-web-app', 'ftp', 'cifs', 'streaming', 'dynamic'
       ]),
+      check('apiUrl', 'API URL is required for dynamic content').if(check('type').equals('dynamic')).not().isEmpty(),
+      check('updateInterval', 'Update Interval is required for dynamic content').if(check('type').equals('dynamic')).not().isEmpty(),
     ],
   ],
   async (req, res) => {
+    console.log('Update request received with data:', req.body);
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, contentType, url, ssspUrl, ftpDetails, cifsDetails, streamingUrl, apiUrl, updateInterval } = req.body;
+    const { title, type, url, apiUrl, updateInterval } = req.body;
 
     try {
       let content = await Content.findById(req.params.id);
@@ -170,7 +174,7 @@ router.put(
       }
 
       let data = content.data;
-      if (contentType === 'dynamic' && apiUrl && apiUrl !== content.apiUrl) {
+      if (type === 'dynamic' && apiUrl && apiUrl !== content.apiUrl) {
         const response = await axios.get(apiUrl);
         data = response.data;
       }
@@ -180,25 +184,22 @@ router.put(
         {
           $set: {
             title,
-            type: contentType,
-            url: contentType === 'webpage' ? url : undefined,
-            ssspUrl: contentType === 'sssp-web-app' ? ssspUrl : undefined,
-            ftpDetails: contentType === 'ftp' ? JSON.parse(ftpDetails) : undefined,
-            cifsDetails: contentType === 'cifs' ? JSON.parse(cifsDetails) : undefined,
-            streamingUrl: contentType === 'streaming' ? streamingUrl : undefined,
-            apiUrl: contentType === 'dynamic' ? apiUrl : undefined,
-            updateInterval: contentType === 'dynamic' ? updateInterval : undefined,
-            lastFetched: contentType === 'dynamic' ? new Date() : undefined,
-            data: contentType === 'dynamic' ? data : undefined,
+            type,
+            url: type === 'webpage' ? url : undefined,
+            apiUrl: type === 'dynamic' ? apiUrl : undefined,
+            updateInterval: type === 'dynamic' ? updateInterval : undefined,
+            lastFetched: type === 'dynamic' ? new Date() : undefined,
+            data: type === 'dynamic' ? data : undefined,
             previewImageUrl: content.previewImageUrl,
           },
         },
         { new: true }
       );
 
+      console.log('Content updated:', content);
       res.json(content);
     } catch (err) {
-      console.error(err.message);
+      console.error('Error updating content:', err.message);
       if (err.kind === 'ObjectId') {
         return res.status(404).json({ msg: 'Content not found' });
       }
