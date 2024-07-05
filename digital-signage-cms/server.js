@@ -1,5 +1,3 @@
-// backend/server.js
-
 require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
@@ -7,7 +5,7 @@ const connectDB = require('./config/db');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const startScheduler = require('./scheduler'); // Correct import for scheduler
+const startScheduler = require('./scheduler');
 
 const app = express();
 
@@ -45,6 +43,7 @@ app.use('/api/content', require('./routes/content'));
 app.use('/api/schedule', require('./routes/schedule'));
 app.use('/api/dynamic-content', require('./routes/dynamicContent'));
 app.use('/api/devices', require('./routes/devices'));
+app.use('/api/ai-content', require('./routes/aiContentRoute')); // Add AI Content Route
 
 // Define a simple route for the root URL
 app.get('/', (req, res) => {

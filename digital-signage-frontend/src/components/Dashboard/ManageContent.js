@@ -167,6 +167,7 @@ const ManageContent = ({ token }) => {
         url: editContent.url,
         apiUrl: editContent.apiUrl,
         updateInterval: editContent.updateInterval,
+        aiGeneratedContent: editContent.aiGeneratedContent,
       };
   
       console.log('Updated content to be sent:', updatedContent);
@@ -338,6 +339,7 @@ const ManageContent = ({ token }) => {
               <MenuItem value="cifs">CIFS</MenuItem>
               <MenuItem value="streaming">Streaming</MenuItem>
               <MenuItem value="dynamic">Dynamic</MenuItem>
+              <MenuItem value="ai">AI</MenuItem>
             </Select>
           </FormControl>
           <TextField
@@ -367,6 +369,16 @@ const ManageContent = ({ token }) => {
                 className={classes.textField}
               />
             </>
+          )}
+          {editContent?.type === 'ai' && (
+            <TextField
+              label="AI Generated Content"
+              name="aiGeneratedContent"
+              value={editContent?.aiGeneratedContent || ''}
+              onChange={handleEditChange}
+              fullWidth
+              className={classes.textField}
+            />
           )}
           <Button variant="contained" color="primary" type="submit" className={classes.textField}>
             Save

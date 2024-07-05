@@ -7,7 +7,7 @@ const ContentSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['image', 'video', 'webpage', 'interactive', 'sssp_web_app', 'ftp', 'cifs', 'streaming', 'dynamic'],
+    enum: ['image', 'video', 'webpage', 'interactive', 'sssp_web_app', 'ftp', 'cifs', 'streaming', 'dynamic', 'ai'],
     required: true,
   },
   url: {
@@ -39,7 +39,7 @@ const ContentSchema = new mongoose.Schema({
   },
   updateInterval: {
     type: Number,
-    required: function() {
+    required: function () {
       return this.type === 'dynamic';
     },
   },
@@ -49,6 +49,9 @@ const ContentSchema = new mongoose.Schema({
   },
   data: {
     type: mongoose.Schema.Types.Mixed,
+  },
+  aiGeneratedContent: {
+    type: String,
   },
   createdAt: {
     type: Date,

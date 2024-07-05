@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Button, Modal, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import { createContent } from '../../services/contentService';
+import { createContent, generateAIContent } from '../../services/contentService';
 
 const useStyles = makeStyles({
   modalContent: {
@@ -28,6 +28,8 @@ const UploadContent = ({ token }) => {
   const [ftpDetails, setFtpDetails] = useState({ host: '', path: '', username: '', password: '' });
   const [cifsDetails, setCifsDetails] = useState({ host: '', path: '', username: '', password: '' });
   const [streamingUrl, setStreamingUrl] = useState('');
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiGeneratedContent, setAiGeneratedContent] = useState('');
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
@@ -41,11 +43,22 @@ const UploadContent = ({ token }) => {
     setFtpDetails({ host: '', path: '', username: '', password: '' });
     setCifsDetails({ host: '', path: '', username: '', password: '' });
     setStreamingUrl('');
+    setAiPrompt('');
+    setAiGeneratedContent('');
   };
 
   const handleFileChange = (e) => setFile(e.target.files[0]);
 
   const handleDynamicChange = (e) => setDynamicContent({ ...dynamicContent, [e.target.name]: e.target.value });
+
+  const handleGenerateAIContent = async () => {
+    try {
+      const generatedContent = await generateAIContent({ prompt: aiPrompt });
+      setAiGeneratedContent(generatedContent.content);
+    } catch (error) {
+      console.error('Error generating AI content', error.response?.data || error.message);
+    }
+  };
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -70,6 +83,8 @@ const UploadContent = ({ token }) => {
       if (url) {
         formData.append('url', url);
       }
+    } else if (contentType === 'ai') {
+      formData.append('aiGeneratedContent', aiGeneratedContent);
     }
 
     try {
@@ -111,6 +126,7 @@ const UploadContent = ({ token }) => {
                 <MenuItem value="ftp">FTP</MenuItem>
                 <MenuItem value="cifs">CIFS</MenuItem>
                 <MenuItem value="streaming">Streaming</MenuItem>
+                <MenuItem value="ai">AI</MenuItem>
               </Select>
             </FormControl>
 
@@ -255,6 +271,7 @@ const UploadContent = ({ token }) => {
                 />
               </Box>
             )}
+            
             {contentType === 'streaming' && (
               <Box>
                 <TextField
@@ -265,6 +282,35 @@ const UploadContent = ({ token }) => {
                   margin="normal"
                   required
                 />
+              </Box>
+            )}
+
+            {contentType === 'ai' && (
+              <Box>
+                <TextField
+                  label="AI Prompt"
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  fullWidth
+                  margin="normal"
+                  required
+                />
+                <Button variant="contained" color="primary" onClick={handleGenerateAIContent}>
+                  Generate Content
+                </Button>
+                {aiGeneratedContent && (
+                  <TextField
+                    label="AI Generated Content"
+                    value={aiGeneratedContent}
+                    fullWidth
+                    margin="normal"
+                    multiline
+                    rows={4}
+                    InputProps={{
+                      readOnly: true,
+                    }}
+                  />
+                )}
               </Box>
             )}
 

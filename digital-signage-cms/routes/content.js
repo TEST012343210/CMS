@@ -28,7 +28,7 @@ router.post(
     [
       check('title', 'Title is required').not().isEmpty(),
       check('contentType', 'Content Type is required').isIn([
-        'image', 'video', 'webpage', 'interactive', 'sssp-web-app', 'ftp', 'cifs', 'streaming', 'dynamic'
+        'image', 'video', 'webpage', 'interactive', 'sssp-web-app', 'ftp', 'cifs', 'streaming', 'dynamic', 'ai'
       ]),
       check('updateInterval', 'Update Interval is required for dynamic content').if(check('contentType').equals('dynamic')).not().isEmpty(),
     ],
@@ -42,7 +42,7 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, contentType, url, ssspUrl, ftpDetails, cifsDetails, streamingUrl, apiUrl, updateInterval } = req.body;
+    const { title, contentType, url, ssspUrl, ftpDetails, cifsDetails, streamingUrl, apiUrl, updateInterval, aiGeneratedContent } = req.body;
     let fileUrl = url;
 
     if (req.file) {
@@ -69,6 +69,7 @@ router.post(
         updateInterval: contentType === 'dynamic' ? updateInterval : undefined,
         lastFetched: contentType === 'dynamic' ? new Date() : undefined,
         data: contentType === 'dynamic' ? data : undefined,
+        aiGeneratedContent: contentType === 'ai' ? aiGeneratedContent : undefined,
         user: req.user.id,
         previewImageUrl: req.file ? fileUrl : undefined,
       });
@@ -150,7 +151,7 @@ router.put(
     [
       check('title', 'Title is required').not().isEmpty(),
       check('type', 'Content Type is required').isIn([
-        'image', 'video', 'webpage', 'interactive', 'sssp-web-app', 'ftp', 'cifs', 'streaming', 'dynamic'
+        'image', 'video', 'webpage', 'interactive', 'sssp-web-app', 'ftp', 'cifs', 'streaming', 'dynamic', 'ai'
       ]),
       check('apiUrl', 'API URL is required for dynamic content').if(check('type').equals('dynamic')).not().isEmpty(),
       check('updateInterval', 'Update Interval is required for dynamic content').if(check('type').equals('dynamic')).not().isEmpty(),
@@ -164,7 +165,7 @@ router.put(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, type, url, apiUrl, updateInterval } = req.body;
+    const { title, type, url, apiUrl, updateInterval, aiGeneratedContent } = req.body;
 
     try {
       let content = await Content.findById(req.params.id);
@@ -190,6 +191,7 @@ router.put(
             updateInterval: type === 'dynamic' ? updateInterval : undefined,
             lastFetched: type === 'dynamic' ? new Date() : undefined,
             data: type === 'dynamic' ? data : undefined,
+            aiGeneratedContent: type === 'ai' ? aiGeneratedContent : undefined,
             previewImageUrl: content.previewImageUrl,
           },
         },

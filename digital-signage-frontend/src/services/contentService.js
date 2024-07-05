@@ -75,3 +75,13 @@ export const getDynamicContent = async (contentId, token) => {
     throw error;
   }
 };
+
+export const generateAIContent = async (data) => {
+  try {
+    const response = await axios.post('http://localhost:3000/api/ai-content/generate-content', data);
+    return response.data;
+  } catch (error) {
+    console.error('Error generating AI content', error.response?.data || error.message);
+    throw error;
+  }
+};

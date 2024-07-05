@@ -1,4 +1,3 @@
-// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -21,6 +20,7 @@ import AllDevices from './components/Devices/AllDevices';
 import UnapprovedDevices from './components/Devices/UnapprovedDevices';
 import ManageDevice from './components/Devices/ManageDevice';
 import DeviceRegistration from './components/DeviceRegistration';
+import AIContentCreation from './components/AIContentCreation';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -54,6 +54,7 @@ const App = () => {
                 <Route path="create-schedule" element={<CreateSchedule token={token} />} />
                 <Route path="manage-schedules" element={<ManageSchedules token={token} />} />
                 <Route path="manage-dynamic-content" element={<ManageDynamicContent token={token} />} />
+                <Route path="create-ai-content" element={<AIContentCreation token={token} />} />
               </Route>
               <Route path="/dynamic-content/:type" element={<DynamicData />} />
             </Routes>

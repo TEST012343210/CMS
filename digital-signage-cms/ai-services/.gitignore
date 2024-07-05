@@ -1,0 +1,19 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Dependencies
+.DS_Store
+
+# Build directory
+dist/
+
+# Configuration
+config/default.json
