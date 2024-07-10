@@ -1,3 +1,5 @@
+// backend/routes/aiContentRoute.js
+
 const express = require('express');
 const router = express.Router();
 const { HfInference } = require('@huggingface/inference');
@@ -17,15 +19,17 @@ router.post('/generate-content', async (req, res) => {
       model: 'distilgpt2',
       inputs: prompt,
       parameters: { 
-        max_new_tokens: 100, 
+        max_new_tokens: 50, // Limit the number of tokens to avoid overly verbose or nonsensical responses
         temperature: 0.7, 
         top_p: 0.9, 
         repetition_penalty: 1.2 
       },
     });
 
-    const generatedText = response.generated_text;
-    res.json({ content: generatedText });
+    console.log('Hugging Face API response:', response);
+
+    const generatedText = response.generated_text.trim(); // Remove leading/trailing spaces
+    res.json({ content: generatedText, prompt: prompt });
   } catch (error) {
     console.error('Error generating content:', error.message, error.response ? error.response.data : '');
     res.status(500).json({ error: 'Failed to generate content' });

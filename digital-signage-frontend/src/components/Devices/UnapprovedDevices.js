@@ -29,6 +29,14 @@ const UnapprovedDevices = () => {
   const [deviceName, setDeviceName] = useState('');
   const [locationId, setLocationId] = useState('');
   const [code, setCode] = useState('');
+  const [brand, setBrand] = useState('');
+  const [model, setModel] = useState('');
+  const [capacity, setCapacity] = useState('');
+  const [firmwareVersion, setFirmwareVersion] = useState('');
+  const [macAddress, setMacAddress] = useState('');
+  const [ipAddress, setIpAddress] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
+  const [modelName, setModelName] = useState('');
 
   useEffect(() => {
     fetchDevices();
@@ -49,6 +57,14 @@ const UnapprovedDevices = () => {
     setSelectedDevice(device);
     setDeviceName(device.name);
     setLocationId(device.locationId || '');
+    setBrand(device.brand || 'Unknown');
+    setModel(device.model || 'Unknown');
+    setCapacity(device.capacity || 'Unknown');
+    setFirmwareVersion(device.firmwareVersion || 'Unknown');
+    setMacAddress(device.macAddress || 'Unknown');
+    setIpAddress(device.ipAddress || 'Unknown');
+    setSerialNumber(device.serialNumber || 'Unknown');
+    setModelName(device.modelName || 'Unknown');
     setCode('');
     setOpen(true);
   };
@@ -56,7 +72,7 @@ const UnapprovedDevices = () => {
   const handleApprove = async () => {
     try {
       console.log('Approving device:', selectedDevice._id, deviceName, locationId, code);
-      await approveDevice(selectedDevice._id, deviceName, locationId, code);
+      await approveDevice(selectedDevice._id, deviceName, locationId, code, brand, model, capacity, firmwareVersion, macAddress, ipAddress, serialNumber, modelName);
       toast.success('Device approved and updated successfully');
       setOpen(false);
       fetchDevices(); // Refresh the list of unapproved devices
@@ -148,6 +164,89 @@ const UnapprovedDevices = () => {
             value={code}
             onChange={(e) => setCode(e.target.value)}
             autoComplete="off"
+          />
+          <Typography variant="h6" gutterBottom>
+            Device Specifications
+          </Typography>
+          <TextField
+            margin="dense"
+            label="Brand"
+            fullWidth
+            value={brand}
+            InputProps={{
+              readOnly: true,
+              style: { backgroundColor: '#f0f0f0' },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Model"
+            fullWidth
+            value={model}
+            InputProps={{
+              readOnly: true,
+              style: { backgroundColor: '#f0f0f0' },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Capacity"
+            fullWidth
+            value={capacity}
+            InputProps={{
+              readOnly: true,
+              style: { backgroundColor: '#f0f0f0' },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Firmware Version"
+            fullWidth
+            value={firmwareVersion}
+            InputProps={{
+              readOnly: true,
+              style: { backgroundColor: '#f0f0f0' },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="MAC Address"
+            fullWidth
+            value={macAddress}
+            InputProps={{
+              readOnly: true,
+              style: { backgroundColor: '#f0f0f0' },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="IP Address"
+            fullWidth
+            value={ipAddress}
+            InputProps={{
+              readOnly: true,
+              style: { backgroundColor: '#f0f0f0' },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Device Serial Number"
+            fullWidth
+            value={serialNumber}
+            InputProps={{
+              readOnly: true,
+              style: { backgroundColor: '#f0f0f0' },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Device Model Name"
+            fullWidth
+            value={modelName}
+            InputProps={{
+              readOnly: true,
+              style: { backgroundColor: '#f0f0f0' },
+            }}
           />
         </DialogContent>
         <DialogActions>

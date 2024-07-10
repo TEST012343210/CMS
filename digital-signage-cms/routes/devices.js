@@ -1,3 +1,5 @@
+// digital-signage-cms/routes/devices.js
+
 const express = require('express');
 const router = express.Router();
 const Device = require('../models/Device');
@@ -73,6 +75,14 @@ router.get('/register', async (req, res) => {
         identifier: newIdentifier,
         approved: false,
         code,
+        brand: 'Unknown',
+        model: 'Unknown',
+        capacity: 'Unknown',
+        firmwareVersion: 'Unknown',
+        macAddress: 'Unknown',
+        ipAddress: 'Unknown',
+        serialNumber: 'Unknown',
+        modelName: 'Unknown'
       });
 
       await device.save();
@@ -132,7 +142,7 @@ router.get('/:id', [auth, checkRole(['Admin', 'Content Manager'])], async (req, 
 // Approve device and optionally rename it
 router.patch('/:id/approve', [auth, checkRole(['Admin'])], async (req, res) => {
   const requestId = uuidv4();
-  const { name, locationId, code } = req.body;
+  const { name, locationId, code, brand, model, capacity, firmwareVersion, macAddress, ipAddress, serialNumber, modelName } = req.body;
   const clientId = req.body.clientId; // Ensure clientId is passed in the request body
 
   try {
@@ -149,11 +159,36 @@ router.patch('/:id/approve', [auth, checkRole(['Admin'])], async (req, res) => {
       logWithTimestamp('License limit reached for client.', requestId);
       return res.status(403).json({ msg: 'License limit reached. Please purchase more licenses.' });
     }
+
     if (name) {
       device.name = name;
     }
     if (locationId) {
       device.locationId = locationId;
+    }
+    if (brand) {
+      device.brand = brand;
+    }
+    if (model) {
+      device.model = model;
+    }
+    if (capacity) {
+      device.capacity = capacity;
+    }
+    if (firmwareVersion) {
+      device.firmwareVersion = firmwareVersion;
+    }
+    if (macAddress) {
+      device.macAddress = macAddress;
+    }
+    if (ipAddress) {
+      device.ipAddress = ipAddress;
+    }
+    if (serialNumber) {
+      device.serialNumber = serialNumber;
+    }
+    if (modelName) {
+      device.modelName = modelName;
     }
     device.approved = true;
     await device.save();
@@ -164,10 +199,10 @@ router.patch('/:id/approve', [auth, checkRole(['Admin'])], async (req, res) => {
   }
 });
 
-// Update device name and location ID
+// Update device details
 router.patch('/:id/details', [auth, checkRole(['Admin'])], async (req, res) => {
   const requestId = uuidv4();
-  const { name, locationId } = req.body;
+  const { name, locationId, brand, model, capacity, firmwareVersion, macAddress, ipAddress, serialNumber, modelName } = req.body;
 
   try {
     const device = await Device.findById(req.params.id);
@@ -175,8 +210,36 @@ router.patch('/:id/details', [auth, checkRole(['Admin'])], async (req, res) => {
       logWithTimestamp(`Device not found: ${req.params.id}`, requestId);
       return res.status(404).json({ msg: 'Device not found' });
     }
-    device.name = name;
-    device.locationId = locationId;
+    if (name) {
+      device.name = name;
+    }
+    if (locationId) {
+      device.locationId = locationId;
+    }
+    if (brand) {
+      device.brand = brand;
+    }
+    if (model) {
+      device.model = model;
+    }
+    if (capacity) {
+      device.capacity = capacity;
+    }
+    if (firmwareVersion) {
+      device.firmwareVersion = firmwareVersion;
+    }
+    if (macAddress) {
+      device.macAddress = macAddress;
+    }
+    if (ipAddress) {
+      device.ipAddress = ipAddress;
+    }
+    if (serialNumber) {
+      device.serialNumber = serialNumber;
+    }
+    if (modelName) {
+      device.modelName = modelName;
+    }
     await device.save();
     res.json(device);
   } catch (err) {
@@ -200,34 +263,6 @@ router.delete('/:id', [auth, checkRole(['Admin'])], async (req, res) => {
     logWithTimestamp(`Server error: ${err.message}`, requestId);
     res.status(500).send('Server error');
   }
-});
-
-// Handle sssp_config.xml request
-router.get('/register/sssp_config.xml', (req, res) => {
-  const requestId = uuidv4();
-  logWithTimestamp('Received GET request to /register/sssp_config.xml', requestId);
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>
-  <SamsungSmartSignagePlatform>
-    <device>
-      <name>Unnamed Device</name>
-      <identifier>Display</identifier>
-      <approved>false</approved>
-    </device>
-  </SamsungSmartSignagePlatform>`);
-});
-
-// Debug route to check if the XML route is being hit
-router.get('/test/sssp_config.xml', (req, res) => {
-  const requestId = uuidv4();
-  logWithTimestamp('Received GET request to /test/sssp_config.xml', requestId);
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>
-  <SamsungSmartSignagePlatform>
-    <device>
-      <name>Test Device</name>
-      <identifier>TestDisplay</identifier>
-      <approved:false</approved>
-    </device>
-  </SamsungSmartSignagePlatform>`);
 });
 
 module.exports = router;

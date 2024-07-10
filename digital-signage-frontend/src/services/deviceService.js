@@ -18,8 +18,20 @@ const getUnapprovedDevices = () => {
 };
 
 // Approve a device with authentication
-const approveDevice = (deviceId, name, locationId, code) => {
-  return axios.patch(`${API_URL}/${deviceId}/approve`, { name, locationId, code }, {
+const approveDevice = (deviceId, name, locationId, code, brand, model, capacity, firmwareVersion, macAddress, ipAddress, serialNumber, modelName) => {
+  return axios.patch(`${API_URL}/${deviceId}/approve`, { 
+    name, 
+    locationId, 
+    code, 
+    brand, 
+    model, 
+    capacity, 
+    firmwareVersion, 
+    macAddress, 
+    ipAddress,
+    serialNumber,
+    modelName 
+  }, {
     headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
   });
 };
@@ -32,8 +44,19 @@ const deleteDevice = (deviceId) => {
 };
 
 // Update device details with authentication
-const updateDeviceDetails = (deviceId, name, locationId) => {
-  return axios.patch(`${API_URL}/${deviceId}/details`, { name, locationId }, {
+const updateDeviceDetails = (deviceId, name, locationId, brand, model, capacity, firmwareVersion, macAddress, ipAddress, serialNumber, modelName) => {
+  return axios.patch(`${API_URL}/${deviceId}/details`, { 
+    name, 
+    locationId, 
+    brand, 
+    model, 
+    capacity, 
+    firmwareVersion, 
+    macAddress, 
+    ipAddress,
+    serialNumber,
+    modelName 
+  }, {
     headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
   });
 };

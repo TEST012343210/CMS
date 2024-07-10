@@ -29,6 +29,38 @@ const DeviceSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  brand: {
+    type: String,
+    default: 'Unknown',
+  },
+  model: {
+    type: String,
+    default: 'Unknown',
+  },
+  capacity: {
+    type: String,
+    default: 'Unknown',
+  },
+  firmwareVersion: {
+    type: String,
+    default: 'Unknown',
+  },
+  macAddress: {
+    type: String,
+    default: 'Unknown',
+  },
+  ipAddress: {
+    type: String,
+    default: 'Unknown',
+  },
+  serialNumber: {
+    type: String,
+    default: 'Unknown',
+  },
+  modelName: {
+    type: String,
+    default: 'Unknown',
+  },
 });
 
 DeviceSchema.index({ identifier: 1 }, { unique: true });

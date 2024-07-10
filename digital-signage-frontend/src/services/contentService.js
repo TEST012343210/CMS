@@ -1,3 +1,5 @@
+// frontend/src/services/contentService.js
+
 import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/api/content';
@@ -14,11 +16,11 @@ export const getAllContent = async (token) => {
   }
 };
 
-export const createContent = async (formData, token) => {
+export const createContent = async (contentData, token) => {
   try {
-    const response = await axios.post(API_URL, formData, {
+    const response = await axios.post(API_URL, contentData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
     });

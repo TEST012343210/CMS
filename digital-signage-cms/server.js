@@ -45,6 +45,47 @@ app.use('/api/dynamic-content', require('./routes/dynamicContent'));
 app.use('/api/devices', require('./routes/devices'));
 app.use('/api/ai-content', require('./routes/aiContentRoute')); // Add AI Content Route
 
+const Device = require('./models/Device');
+
+// Endpoint to register device
+app.post('/api/registerDevice', async (req, res) => {
+  console.log(req.body);  // Log the incoming request
+
+  const { clientId, name, identifier, approved, code, locationId, brand, model, capacity, firmwareVersion, macAddress, ipAddress } = req.body;
+
+  try {
+    const device = new Device({
+      clientId,
+      name,
+      identifier,
+      approved,
+      code,
+      locationId,
+      brand,
+      model,
+      capacity,
+      firmwareVersion,
+      macAddress,
+      ipAddress
+    });
+
+    await device.save();
+    res.status(200).send({ message: 'Device registered successfully' });
+  } catch (error) {
+    res.status(500).send({ message: 'Failed to register device', error });
+  }
+});
+
+// Endpoint to get all devices
+app.get('/api/devices', async (req, res) => {
+  try {
+    const devices = await Device.find();
+    res.status(200).send(devices);
+  } catch (error) {
+    res.status(500).send({ message: 'Failed to retrieve devices', error });
+  }
+});
+
 // Define a simple route for the root URL
 app.get('/', (req, res) => {
   res.send('Welcome to the Digital Signage CMS');

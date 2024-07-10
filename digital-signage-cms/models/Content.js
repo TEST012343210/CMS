@@ -1,3 +1,5 @@
+// backend/models/Content.js
+
 const mongoose = require('mongoose');
 
 const ContentSchema = new mongoose.Schema({
@@ -51,6 +53,9 @@ const ContentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
   },
   aiGeneratedContent: {
+    type: String,
+  },
+  usedPrompt: {
     type: String,
   },
   createdAt: {
