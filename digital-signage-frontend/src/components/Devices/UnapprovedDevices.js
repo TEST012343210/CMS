@@ -45,6 +45,7 @@ const UnapprovedDevices = () => {
   const fetchDevices = async () => {
     try {
       const response = await getUnapprovedDevices();
+      console.log(response.data);  // Add this line for debugging
       setDevices(response.data);
     } catch (error) {
       console.error('Error fetching devices', error.response?.data || error.message);

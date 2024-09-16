@@ -7,14 +7,14 @@ const Content = require('./models/Content');
 const db = config.get('mongoURI');
 const updateIntervalMinutes = config.get('updateIntervalMinutes');
 
-mongoose.connect(db, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => {
-  console.log('MongoDB connected for scheduler');
-}).catch((err) => {
-  console.error('MongoDB connection error:', err.message);
-});
+mongoose.connect(db)
+  .then(() => {
+    console.log('MongoDB connected for scheduler');
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err.message);
+  });
+
 
 // Function to update dynamic content
 const updateDynamicContent = async () => {
