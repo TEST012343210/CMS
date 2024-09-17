@@ -1,11 +1,11 @@
 const cron = require('node-cron');
 const axios = require('axios');
 const mongoose = require('mongoose');
-const config = require('config');
+require('dotenv').config(); // Load environment variables from .env file
 const Content = require('./models/Content');
 
-const db = config.get('mongoURI');
-const updateIntervalMinutes = config.get('updateIntervalMinutes');
+const db = process.env.MONGO_URI; // Use environment variable for MongoDB URI
+const updateIntervalMinutes = process.env.UPDATE_INTERVAL_MINUTES || 60; // Default to 60 minutes if not set
 
 mongoose.connect(db)
   .then(() => {
@@ -14,7 +14,6 @@ mongoose.connect(db)
   .catch((err) => {
     console.error('MongoDB connection error:', err.message);
   });
-
 
 // Function to update dynamic content
 const updateDynamicContent = async () => {
@@ -34,11 +33,11 @@ const updateDynamicContent = async () => {
           const response = await axios.get(content.apiUrl);
           content.data = response.data;
           content.lastFetched = now;
-      
+
           // Force Mongoose to recognize changes
           content.markModified('data');
           content.markModified('lastFetched');
-      
+
           await content.save();
           console.log(`Successfully updated content for ${content.title}`);
           
@@ -54,7 +53,7 @@ const updateDynamicContent = async () => {
   }
 };
 
-// Schedule the update task to run every X minutes based on the config
+// Schedule the update task to run every X minutes based on the environment variable
 cron.schedule(`*/${updateIntervalMinutes} * * * *`, updateDynamicContent);
 
 console.log(`Scheduler started, updating dynamic content every ${updateIntervalMinutes} minutes.`);
